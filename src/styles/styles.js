@@ -1,0 +1,91 @@
+import { StyleSheet, ImageBackground  } from 'react-native';
+
+
+const GlobalStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fullPageContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'left',
+    paddingTop: 60,
+    paddingLeft: 40,
+    paddingRight: 40
+  },
+  logo: {
+    width: 130,
+    height: 120,
+    marginBottom: 10
+  },
+  logoText: {
+    color: '#ffffff',
+    fontSize:90,
+    fontFamily: 'Akzidenz-grotesk-light', 
+    padding: 0,
+    margin: 0
+  },
+  headerText: {
+    color: '#ffffff',
+    fontSize:40,
+    fontFamily: 'Akzidenz-grotesk-light', 
+  },
+  subheaderText: {
+    color: '#ffffff',
+    fontSize:18,
+    fontFamily: 'Akzidenz-grotesk-light', 
+  },
+  buttonContainer: {
+    width: '100%',
+    height: '30%',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  primaryButton: {
+    width: '60%',
+    padding: 15, 
+    backgroundColor: '#688e26',
+    borderRadius: 10, 
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 10,
+  },
+  primaryButtonText: {
+    color: '#ffffff',
+    fontSize: 22,
+    fontFamily: 'Akzidenz-grotesk-light', 
+  },
+  secondaryButton: {
+    width: '60%',
+    padding: 15, 
+    backgroundColor: '#Bc3908', 
+    borderRadius: 10, 
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 10,
+  },
+  secondaryButtonText: {
+    color: '#ffffff',
+    fontSize: 22,
+    fontFamily: 'Akzidenz-grotesk-light', 
+  },
+  textInput: {
+    width: '90%',
+    padding: 15, 
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 10,
+    color: '#000000',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  gradientContainer: {
+    flex: 1,
+  },
+});
+
+export default GlobalStyles;
