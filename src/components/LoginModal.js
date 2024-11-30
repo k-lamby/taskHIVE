@@ -1,12 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Modal, StyleSheet, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import GlobalStyles from '../styles/styles';
-import { signIn } from '../config/firebaseConfig'; // Import the signIn function
+import { logIn } from '../services/firebaseService';
+import { useUser } from '../contexts/UserContext';
 
 const LoginModal = ({ visible, onClose, navigation }) => {
   const usernameInputRef = useRef(null); // Reference for the username input
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const { setUserId } = useUser();
 
   useEffect(() => {
     if (visible) {
@@ -19,8 +21,8 @@ const LoginModal = ({ visible, onClose, navigation }) => {
 
   const handleLogin = async () => {
     try {
-      await signIn(email, password); // Attempt to sign in
-      console.log("User logged in:", email);
+      const userId = await logIn(email, password); // Attempt to sign in
+      setUserId(userId);
       onClose(); // Close modal after login
       navigation.navigate('Summary'); // Navigate to the Summary screen
     } catch (error) {

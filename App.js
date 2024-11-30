@@ -8,6 +8,8 @@ import { useFonts } from 'expo-font';
 import HomeScreen from './src/screens/HomeScreen';
 import SummaryScreen from './src/screens/SummaryScreen';
 import SignupScreen from './src/screens/SignupScreen';
+import CreateProjectScreen from './src/screens/CreateProjectScreen';
+import { UserProvider } from './src/contexts/UserContext';
 
 const Stack = createNativeStackNavigator();
 
@@ -22,12 +24,15 @@ export default function App() {
   }
   return (
     <NavigationContainer>
+      <UserProvider>
       <StatusBar barStyle="light-content" />
       <Stack.Navigator initialRouteName="Home">
         <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Signup" component={SignupScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Summary" component={SummaryScreen} />
+        <Stack.Screen name="CreateProject" component={CreateProjectScreen} />
       </Stack.Navigator>
+      </UserProvider>
     </NavigationContainer>
   );
 }

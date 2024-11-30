@@ -1,12 +1,14 @@
-// firebaseConfig.js
+//================== firebaseConfig.js===========================//
+// Handle the api details and configuration for firebase 
+// utility functions are in the service folder
+//===============================================================//
 
 import { initializeApp } from "firebase/app";
-import { getAnalytics, isSupported } from "firebase/analytics";
-import { getFirestore } from 'firebase/firestore'; // For Firestore
-import { initializeAuth, getReactNativePersistence, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth'; // Import the necessary functions
+import { getFirestore } from 'firebase/firestore'; 
+import { initializeAuth, getReactNativePersistence } from 'firebase/auth'; 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Your web app's Firebase configuration
+// configuration details provided by firebase
 const firebaseConfig = {
   apiKey: "AIzaSyAtvVbmFWVMrZXouvgFLVZsLWwHRzxjMmo",
   authDomain: "taskhive-4edce.firebaseapp.com",
@@ -15,46 +17,16 @@ const firebaseConfig = {
   messagingSenderId: "49192012242",
   appId: "1:49192012242:web:5366eb06970a8213f7e00b",
   measurementId: "G-ECX6NK3VQ1"
-};
+  };
 
-// Initialize Firebase
+// initialise the app instance with the configuration details
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app); // Initialize Firestore
-
-async function setupAnalytics() {
-  if (await isSupported()) {
-    const analytics = getAnalytics(app);
-  }
-}
-
-// Initialize Auth with AsyncStorage for persistence
+// initialise the firestore database instance for the app
+const db = getFirestore(app);
+// initialise the authentication for the app
+// allow persistence even after the app is closed
 const auth = initializeAuth(app, {
-  persistence: getReactNativePersistence(AsyncStorage) // Use AsyncStorage for persistence
+  persistence: getReactNativePersistence(AsyncStorage)
 });
 
-// Call the analytics setup function
-setupAnalytics();
-
-// Sign Up Function
-const signUp = async (email, password) => {
-  try {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password); // Use the imported function
-    return userCredential.user;
-  } catch (error) {
-    console.error("Error signing up:", error);
-    throw error;
-  }
-};
-
-// Sign In Function
-const signIn = async (email, password) => {
-  try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    return userCredential.user;
-  } catch (error) {
-    console.error("Error signing in:", error);
-    throw error;
-  }
-};
-
-export { db, auth, signUp, signIn };
+export { db, auth };
