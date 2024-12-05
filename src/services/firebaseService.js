@@ -20,7 +20,7 @@ const signUp = async (email, password) => {
   }
 };
 
-// Uses the firebase authentication for loging the user in
+// Uses the firebase authentication for logging the user in
 const logIn = async (email, password) => {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -55,17 +55,39 @@ const createProject = async (projectName, sharedWith, userId) => {
   }
 };
 
-// Function to fetch all projects
-const fetchProjects = async () => {
+// Function to get all the projects for the particular user
+// Function to fetch projects created by the user or shared with them
+const fetchProjects = async (userId) => {
   try {
+    // for now get all the projects, probably a more scalable way to do this
     const querySnapshot = await getDocs(collection(db, 'projects'));
-    const projects = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    return projects;
+    const projects = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+
+    return projects.filter(project => {
+      // the user id needs to be checked against the current user
+      const isCreatedByUser = project.createdBy === userId;
+      // Split sharedWith string into an array and check if userId is included
+      // we then need to see if there is any match on the shared emails
+      // need to handle the shared emails field being empty
+      console.log(project.sharedWith)
+      const sharedWithUsers = (typeof project.sharedWith === 'string' && project.sharedWith !== '')
+        ? project.sharedWith.split(',').map(email => email.trim())
+        : []; // return an empty array if nothing, otherwise split the emails
+
+      console.log(sharedWithUsers)
+
+      const isSharedWithUser = sharedWithUsers.includes(userId);
+
+      return isCreatedByUser || isSharedWithUser;
+    });
   } catch (error) {
     console.error("Error fetching projects: ", error);
     throw error;
   }
 };
 
-// Export all functions for use in components
+// export only the functions that need to be used outside of this
 export { signUp, logIn, createProject, fetchProjects };

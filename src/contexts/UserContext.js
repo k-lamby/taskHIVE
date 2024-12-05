@@ -12,12 +12,13 @@ const UserContext = createContext();
 // Create a provider, this will wrap around the components that
 // I want to pass the user details to
 export const UserProvider = ({ children }) => {
-  const [userId, setUserId] = useState(null); // Initial state for user ID
+  const [userId, setUserId] = useState(null);
+  const [userEmail, setUserEmail] = useState(null)
 
   // This will be what is passed to the components
   // set user id allows us to update it when the user is loggin in
   return (
-    <UserContext.Provider value={{ userId, setUserId }}>
+    <UserContext.Provider value={{ userId, setUserId, userEmail, setUserEmail }}>
       {children}
     </UserContext.Provider>
   );

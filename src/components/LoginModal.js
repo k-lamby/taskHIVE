@@ -1,3 +1,7 @@
+//================== LoginModal.js===========================//
+// This is the pop up box to handle logging the user in
+//===========================================================//
+
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Modal, StyleSheet, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import GlobalStyles from '../styles/styles';
@@ -22,7 +26,8 @@ const LoginModal = ({ visible, onClose, navigation }) => {
   const handleLogin = async () => {
     try {
       const userId = await logIn(email, password); // Attempt to sign in
-      setUserId(userId);
+      setUserId(userId.uid); // Set user ID in context
+      setUserEmail(userId.email); // Set user ID in context
       onClose(); // Close modal after login
       navigation.navigate('Summary'); // Navigate to the Summary screen
     } catch (error) {

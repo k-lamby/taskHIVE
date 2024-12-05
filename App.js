@@ -25,13 +25,13 @@ export default function App() {
   return (
     <NavigationContainer>
       <UserProvider>
-      <StatusBar barStyle="light-content" />
-      <Stack.Navigator initialRouteName="Home">
-        <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="Signup" component={SignupScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="Summary" component={SummaryScreen} />
-        <Stack.Screen name="CreateProject" component={CreateProjectScreen} />
-      </Stack.Navigator>
+        <StatusBar barStyle="light-content" />
+        <Stack.Navigator initialRouteName="Home">
+          <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="Signup" component={SignupScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="Summary" component={SummaryScreen} />
+          <Stack.Screen name="CreateProject" component={CreateProjectScreen} />
+        </Stack.Navigator>
       </UserProvider>
     </NavigationContainer>
   );
