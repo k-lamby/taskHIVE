@@ -1,18 +1,18 @@
-// App.js
 import 'react-native-gesture-handler';
-import React from 'react';
+import React, { useEffect } from 'react'; // Added useEffect import
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { View, ActivityIndicator, StatusBar } from 'react-native';
+import { View, ActivityIndicator, StatusBar, Alert } from 'react-native';
 import { useFonts } from 'expo-font';
 import HomeScreen from './src/screens/HomeScreen';
 import SummaryScreen from './src/screens/SummaryScreen';
 import SignupScreen from './src/screens/SignupScreen';
 import CreateProjectScreen from './src/screens/CreateProjectScreen';
-import ProjectsScreen from './src/screens/ProjectsScreen'; // Import your new screens
+import ProjectsScreen from './src/screens/ProjectsScreen'; 
 import TasksScreen from './src/screens/TasksScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
-import { UserProvider } from './src/contexts/UserContext';
+import { UserProvider, useUser } from './src/contexts/UserContext'; // Ensure UserContext is updated
+import { requestUserPermission, getFCMToken, handleForegroundMessages } from './src/services/firebaseService';
 
 const Stack = createNativeStackNavigator();
 
@@ -21,10 +21,29 @@ export default function App() {
     'Akzidenz-grotesk-bold': require('./assets/fonts/Akzidenz-grotesk-bold.ttf'),
     'Akzidenz-grotesk-light': require('./assets/fonts/Akzidenz-grotesk-light.ttf'),
   });
+  
+  // Here we handle grabbing the FCM tokens
+  useEffect(() => {
+    const initializeFCM = async () => {
+      const permissionGranted = await requestUserPermission();
+      if (permissionGranted) {
+        const { user } = useContext(UserContext); // Access the user directly from the context
+        if (user?.id) {
+          await getFCMToken(user.id); // Use user.id instead of useUser()
+        } else {
+          Alert.alert('User ID not found');
+        }
+        handleForegroundMessages();
+      }
+    };
+  
+    initializeFCM();
+  }, []);
 
   if (!fontsLoaded) {
     return <ActivityIndicator />;
   }
+
   return (
     <NavigationContainer>
       <UserProvider>

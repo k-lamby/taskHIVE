@@ -13,6 +13,14 @@ const CreateProjectScreen = ({ navigation }) => {
   const [userId, setUserId] = useState(null); // State to hold the user ID
 
   useEffect(() => {
+    const getFCMToken = async () => {
+      const token = await messaging().getToken();
+      console.log('FCM Token:', token);
+    };
+    getFCMToken();
+  }, []);
+  
+  useEffect(() => {
     // Subscribe to the authentication state
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
