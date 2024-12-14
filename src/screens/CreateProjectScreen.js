@@ -3,6 +3,9 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'reac
 import { auth } from '../config/firebaseConfig'; // Ensure this points to your existing Firebase config
 import { createProject } from '../services/firebaseService'; // Import the createProject function
 import { onAuthStateChanged } from 'firebase/auth'; // Import for checking authentication state
+import TopBar from '../components/TopBar';
+import BottomBar from '../components/BottomBar';
+import GradientBackground from "../components/GradientBackground"; 
 
 const CreateProjectScreen = ({ navigation }) => {
   const [projectName, setProjectName] = useState('');
@@ -47,33 +50,43 @@ const CreateProjectScreen = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Create Project</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Project Name"
-        value={projectName}
-        onChangeText={setProjectName}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Share with (emails separated by commas)"
-        value={sharedWith}
-        onChangeText={setSharedWith}
-      />
-      <TouchableOpacity style={styles.button} onPress={handleCreateProject}>
-        <Text style={styles.buttonText}>Create Project</Text>
-      </TouchableOpacity>
-    </View>
+    <GradientBackground>
+      <View style={styles.container}>
+        <TopBar title="Create Project" />
+        <View style={styles.content}>
+          <Text style={styles.header}>Create Project</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Project Name"
+            value={projectName}
+            onChangeText={setProjectName}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Share with (emails separated by commas)"
+            value={sharedWith}
+            onChangeText={setSharedWith}
+          />
+          <TouchableOpacity style={styles.button} onPress={handleCreateProject}>
+            <Text style={styles.buttonText}>Create Project</Text>
+          </TouchableOpacity>
+        </View>
+        <BottomBar navigation={navigation} activeScreen="CreateProject" />
+      </View>
+    </GradientBackground>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    flexDirection: 'column', // Column layout
+  },
+  content: {
+    flex: 1, // Fill the available space
     justifyContent: 'center',
-    padding: 20,
-    backgroundColor: '#220901',
+    alignItems: 'center',
+    paddingHorizontal: 0, // Ensure no horizontal padding
   },
   header: {
     color: '#ffffff',

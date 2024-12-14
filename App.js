@@ -9,6 +9,9 @@ import HomeScreen from './src/screens/HomeScreen';
 import SummaryScreen from './src/screens/SummaryScreen';
 import SignupScreen from './src/screens/SignupScreen';
 import CreateProjectScreen from './src/screens/CreateProjectScreen';
+import ProjectsScreen from './src/screens/ProjectsScreen'; // Import your new screens
+import TasksScreen from './src/screens/TasksScreen';
+import SettingsScreen from './src/screens/SettingsScreen';
 import { UserProvider } from './src/contexts/UserContext';
 
 const Stack = createNativeStackNavigator();
@@ -29,8 +32,11 @@ export default function App() {
         <Stack.Navigator initialRouteName="Home">
           <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Signup" component={SignupScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="Summary" component={SummaryScreen} />
-          <Stack.Screen name="CreateProject" component={CreateProjectScreen} />
+          <Stack.Screen name="Summary" component={SummaryScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="CreateProject" component={CreateProjectScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="Projects" component={ProjectsScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="Tasks" component={TasksScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
         </Stack.Navigator>
       </UserProvider>
     </NavigationContainer>

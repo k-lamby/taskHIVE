@@ -12,6 +12,7 @@ import { View,
 import GlobalStyles from "../styles/styles";
 import { LinearGradient } from "expo-linear-gradient";
 import LoginModal from "../components/LoginModal"; //
+import GradientBackground from "../components/GradientBackground"; 
 
 const HomeScreen = ({ navigation }) => {
   // set this to control whether the login modal is visible or not
@@ -19,15 +20,7 @@ const HomeScreen = ({ navigation }) => {
   return (
     // create linear gradient using the expo library
     // had this here rather than in global styles as kept getting a text error
-    <LinearGradient
-      colors={["#220901", "#Bc3908"]}
-      style={GlobalStyles.gradientContainer}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 0 }}>
-      <ImageBackground
-        source={require("../../assets/images/beeHive.png")}
-        style={GlobalStyles.gradientContainer}
-        resizeMode="cover">
+<GradientBackground>
         <View style={GlobalStyles.fullPageContainer}>
           <Image
             source={require("../../assets/images/logo.png")}
@@ -61,8 +54,7 @@ const HomeScreen = ({ navigation }) => {
           onClose={() => setModalVisible(false)}
           navigation={navigation}
         />
-      </ImageBackground>
-    </LinearGradient>
+    </GradientBackground>
   );
 };
 

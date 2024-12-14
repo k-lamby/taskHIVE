@@ -13,6 +13,7 @@ const LoginModal = ({ visible, onClose, navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { setUserId } = useUser();
+  const { setUserEmail } = useUser();
 
   useEffect(() => {
     if (visible) {
@@ -26,6 +27,7 @@ const LoginModal = ({ visible, onClose, navigation }) => {
   const handleLogin = async () => {
     try {
       const userId = await logIn(email, password); // Attempt to sign in
+      console.log(userId)
       setUserId(userId.uid); // Set user ID in context
       setUserEmail(userId.email); // Set user ID in context
       onClose(); // Close modal after login

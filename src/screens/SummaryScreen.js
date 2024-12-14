@@ -5,24 +5,38 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Button, TouchableOpacity, FlatList, Alert } from 'react-native';
 import GlobalStyles from '../styles/styles';
-import { fetchProjects } from '../services/firebaseService'; // Import fetchProjects
+import { fetchProjects } from '../services/firebaseService';
+import { useUser } from '../contexts/UserContext';
+import TopBar from '../components/TopBar';
+import BottomBar from '../components/BottomBar';
+import GradientBackground from "../components/GradientBackground"; 
 
 const SummaryScreen = ({ navigation }) => {
-  const [projects, setProjects] = useState([]); // State to hold projects
+  // use states to pull in the projects associated with this user
+  const [projects, setProjects] = useState([]); 
+  const { userId, userEmail } = useUser();
 
   useEffect(() => {
     const getProjects = async () => {
+      // check to ensure the user is logged in before accessing any sensitive information
+      if (!userId) {
+        Alert.alert("Error", "User is not logged in.");
+        return;
+      }
+      // then try catch to fetch user projects
       try {
-        const projectData = await fetchProjects(); // Pass userId if needed
-        setProjects(projectData); // Update state with fetched projects
+        const projectData = await fetchProjects(userId, userEmail);
+        // update the states with the returned project data
+        setProjects(projectData); 
       } catch (error) {
+        // basic error handling, we will expand on this in the next iteration
         Alert.alert("Error", "Failed to fetch projects.");
         console.error(error);
       }
     };
 
-    getProjects(); // Fetch projects on component mount
-  }, []);
+    getProjects();
+  }, [userId, userEmail]); // add user details as a dependency in case we need to refetch
 
   const renderProjectItem = ({ item }) => (
     <View style={styles.projectItem}>
@@ -32,28 +46,25 @@ const SummaryScreen = ({ navigation }) => {
   );
 
   return (
-    <View style={styles.container}>
-      <TouchableOpacity 
-        style={GlobalStyles.primaryButton} 
-        onPress={() => navigation.navigate('CreateProject')}>
-        <Text style={GlobalStyles.primaryButtonText}>Create Project</Text>
-      </TouchableOpacity>
-      <Text style={styles.text}>Welcome to the Summary Screen!</Text>
+    <GradientBackground>
+      <TopBar title="Welcome, Katherine!" />
+      <View style={styles.container}>
+        {/* Display the list of projects */}
+        {projects.length > 0 ? (
+          <FlatList
+            data={projects}
+            renderItem={renderProjectItem}
+            keyExtractor={item => item.id}
+            style={styles.projectList}
+            contentContainerStyle={styles.flatListContent} // Adjust FlatList content
+          />
+        ) : (
+          <Text style={styles.noProjectsText}>No projects created yet.</Text>
+        )}
 
-      {/* Display the list of projects */}
-      {projects.length > 0 ? (
-        <FlatList
-          data={projects}
-          renderItem={renderProjectItem}
-          keyExtractor={item => item.id}
-          style={styles.projectList}
-        />
-      ) : (
-        <Text style={styles.noProjectsText}>No projects created yet.</Text>
-      )}
-
-      <Button title="Go Back" onPress={() => navigation.goBack()} />
-    </View>
+<BottomBar navigation={navigation} activeScreen="Summary" />
+      </View>
+    </GradientBackground>
   );
 };
 
@@ -62,7 +73,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#220901',
+    paddingHorizontal: 0, // Ensure no horizontal padding
   },
   text: {
     color: '#ffffff',
@@ -70,8 +81,11 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   projectList: {
-    width: '100%',
+    width: '100%', // Full width for the FlatList
     marginTop: 20,
+  },
+  flatListContent: {
+    paddingHorizontal: 0, // Ensure no horizontal padding
   },
   projectItem: {
     backgroundColor: '#Bc3908',
