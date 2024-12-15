@@ -72,12 +72,12 @@ const fetchProjects = async (userId, userEmail) => {
       // Split sharedWith string into an array and check if userId is included
       // we then need to see if there is any match on the shared emails
       // need to handle the shared emails field being empty
-      const sharedWithUsers = (typeof project.sharedWith === 'string' && project.sharedWith !== '')
-        ? project.sharedWith.split(',').map(email => email.trim())
-        : []; // return an empty array if nothing, otherwise split the emails
+      console.log(project.sharedWith)
+      const isSharedWithUser = Array.isArray(project.sharedWith) && project.sharedWith.length > 0
+      ? project.sharedWith.some(email => email.trim() === userEmail.trim())
+      : false;
 
-      const isSharedWithUser = sharedWithUsers.includes(userId);
-
+        
       return isCreatedByUser || isSharedWithUser;
     });
   } catch (error) {
