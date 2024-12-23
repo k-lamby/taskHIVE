@@ -1,4 +1,3 @@
-// App.js
 import 'react-native-gesture-handler';
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
@@ -9,9 +8,10 @@ import HomeScreen from './src/screens/HomeScreen';
 import SummaryScreen from './src/screens/SummaryScreen';
 import SignupScreen from './src/screens/SignupScreen';
 import CreateProjectScreen from './src/screens/CreateProjectScreen';
-import ProjectsScreen from './src/screens/ProjectsScreen'; // Import your new screens
+import ProjectsScreen from './src/screens/ProjectsScreen';
 import TasksScreen from './src/screens/TasksScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
+import ProjectDetailScreen from './src/screens/ProjectDetailScreen'; // Import the new screen
 import { UserProvider } from './src/contexts/UserContext';
 
 const Stack = createNativeStackNavigator();
@@ -25,6 +25,7 @@ export default function App() {
   if (!fontsLoaded) {
     return <ActivityIndicator />;
   }
+  
   return (
     <NavigationContainer>
       <UserProvider>
@@ -37,6 +38,7 @@ export default function App() {
           <Stack.Screen name="Projects" component={ProjectsScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Tasks" component={TasksScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="ProjectDetail" component={ProjectDetailScreen} options={{ headerShown: true }} />
         </Stack.Navigator>
       </UserProvider>
     </NavigationContainer>

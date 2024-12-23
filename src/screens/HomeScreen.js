@@ -7,10 +7,8 @@ import React, { useState } from "react";
 import { View,
          Text,
          Image,
-         TouchableOpacity,
-         ImageBackground } from "react-native";
+         TouchableOpacity  } from "react-native";
 import GlobalStyles from "../styles/styles";
-import { LinearGradient } from "expo-linear-gradient";
 import LoginModal from "../components/LoginModal"; //
 import GradientBackground from "../components/GradientBackground"; 
 

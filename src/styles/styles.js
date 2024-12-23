@@ -2,11 +2,7 @@ import { StyleSheet, ImageBackground  } from 'react-native';
 
 
 const GlobalStyles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+// Login and sign up page specific styles
   fullPageContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -27,6 +23,8 @@ const GlobalStyles = StyleSheet.create({
     padding: 0,
     margin: 0
   },
+  // ===== REUSABLE TEXT STYLES ===== //
+  // used for main te
   headerText: {
     color: '#ffffff',
     fontSize:40,
@@ -36,6 +34,20 @@ const GlobalStyles = StyleSheet.create({
     color: '#ffffff',
     fontSize:18,
     fontFamily: 'Akzidenz-grotesk-light', 
+  },
+  normalText: {
+    color: '#ffffff',
+    fontSize:16,
+    fontFamily: 'Akzidenz-grotesk-light', 
+  },
+  translucentText: {
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontSize:16,
+    fontFamily: 'Akzidenz-grotesk-light', 
+  },
+  bulletStyle: {
+    color: '#688e26',
+    fontSize:24,
   },
   buttonContainer: {
     width: '100%',

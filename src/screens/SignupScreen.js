@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ImageBackground, Image, TouchableWithoutFeedback, Keyboard, Alert } from 'react-native';
 import GlobalStyles from '../styles/styles';
 import { LinearGradient } from 'expo-linear-gradient';
-import { signUp } from '../services/firebaseService';
+import { signUp } from '../services/authService';
 
 const SignupScreen = ({ navigation }) => {
   const [name, setName] = useState('');

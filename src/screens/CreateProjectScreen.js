@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { auth } from '../config/firebaseConfig'; // Ensure this points to your existing Firebase config
-import { createProject } from '../services/firebaseService'; // Import the createProject function
+import { createProject } from '../services/authService'; // Import the createProject function
 import { onAuthStateChanged } from 'firebase/auth'; // Import for checking authentication state
 import TopBar from '../components/TopBar';
 import BottomBar from '../components/BottomBar';

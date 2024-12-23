@@ -1,69 +1,90 @@
-//================== SummaryScreen.js===========================//
-// This shows a summary of the users projects and tasks for now
-// it will just show projects for now we will expand this for the final version
+//================== SummaryScreen.js ===========================//
+// This shows a summary of the user's projects and tasks for now.
+// It will just show projects for now; we will expand this for the final version.
 //===============================================================//
+
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Button, TouchableOpacity, FlatList, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert } from 'react-native';
 import GlobalStyles from '../styles/styles';
-import { fetchProjects } from '../services/firebaseService';
+import { fetchProjects } from '../services/authService';
 import { useUser } from '../contexts/UserContext';
 import TopBar from '../components/TopBar';
 import BottomBar from '../components/BottomBar';
 import GradientBackground from "../components/GradientBackground"; 
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { faBolt, faPlus } from '@fortawesome/free-solid-svg-icons';
 
 const SummaryScreen = ({ navigation }) => {
-  // use states to pull in the projects associated with this user
-  const [projects, setProjects] = useState([]); 
+  const [projects, setProjects] = useState([]);
   const { userId, userEmail } = useUser();
 
   useEffect(() => {
     const getProjects = async () => {
-      // check to ensure the user is logged in before accessing any sensitive information
       if (!userId) {
         Alert.alert("Error", "User is not logged in.");
         return;
       }
-      // then try catch to fetch user projects
       try {
         const projectData = await fetchProjects(userId, userEmail);
-        // update the states with the returned project data
         setProjects(projectData); 
       } catch (error) {
-        // basic error handling, we will expand on this in the next iteration
         Alert.alert("Error", "Failed to fetch projects.");
         console.error(error);
       }
     };
 
     getProjects();
-  }, [userId, userEmail]); // add user details as a dependency in case we need to refetch
+  }, [userId, userEmail]);
 
   const renderProjectItem = ({ item }) => (
+    <TouchableOpacity onPress={() => navigation.navigate('ProjectDetail', { projectId: item.id })}>
     <View style={styles.projectItem}>
-      <Text style={styles.projectName}>{item.name}</Text>
-      <Text style={styles.sharedWith}>Shared with: {item.sharedWith.join(', ')}</Text>
+      <FontAwesomeIcon style={GlobalStyles.bulletStyle} icon={faBolt}  />
+      <Text style={GlobalStyles.normalText}>{item.name}</Text>
     </View>
+    </TouchableOpacity>
   );
 
   return (
     <GradientBackground>
       <TopBar title="Welcome, Katherine!" />
       <View style={styles.container}>
-        {/* Display the list of projects */}
-        {projects.length > 0 ? (
-          <FlatList
-            data={projects}
-            renderItem={renderProjectItem}
-            keyExtractor={item => item.id}
-            style={styles.projectList}
-            contentContainerStyle={styles.flatListContent} // Adjust FlatList content
-          />
-        ) : (
-          <Text style={styles.noProjectsText}>No projects created yet.</Text>
-        )}
+        {/* Projects Section */}
+        <View style={styles.projectsSection}>
+          <Text style={GlobalStyles.subheaderText}>Current Projects</Text>
+          {projects.length > 0 ? (
+            <FlatList
+              data={projects}
+              renderItem={renderProjectItem}
+              keyExtractor={item => item.id}
+              style={styles.projectList}
+              contentContainerStyle={styles.flatListContent}
+            />
+          ) : (
+            <Text style={styles.normalText}>No projects created yet.</Text>
+          )}
+          <TouchableOpacity 
+            style={styles.addProject} 
+            onPress={() => {/* navigation to add project */}}
+          >
+            <FontAwesomeIcon style={GlobalStyles.bulletStyle} icon={faPlus}  />
+            <Text style={GlobalStyles.translucentText}>Add new project</Text>
+          </TouchableOpacity>
+        </View>
 
-<BottomBar navigation={navigation} activeScreen="Summary" />
+        {/* Tasks Section */}
+        <View style={styles.tasksSection}>
+          <Text style={GlobalStyles.subheaderText}>Tasks</Text>
+          <Text style={GlobalStyles.normalText}>No tasks</Text>
+        </View>
+
+        {/* Recent Activity Section */}
+        <View style={styles.activitySection}>
+          <Text style={GlobalStyles.subheaderText}>Recent Activity</Text>
+          <Text style={GlobalStyles.normalText}>No activity</Text>
+        </View>
       </View>
+      <BottomBar navigation={navigation} activeScreen="Summary" />
     </GradientBackground>
   );
 };
@@ -71,38 +92,78 @@ const SummaryScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 0, // Ensure no horizontal padding
+    paddingHorizontal: 20,
+    paddingTop: 20,
   },
-  text: {
-    color: '#ffffff',
-    fontSize: 24,
+  projectsSection: {
+    backgroundColor: 'rgba(34, 9, 1, 0.5)',
+    padding: 15,
+    borderRadius: 8,
     marginBottom: 20,
   },
+  tasksSection: {
+    backgroundColor: 'rgba(104, 142, 38, 0.5)',
+    padding: 15,
+    borderRadius: 8,
+    marginBottom: 20,
+  },
+  activitySection: {
+    backgroundColor: 'rgba(248, 148, 59, 0.5)',
+    padding: 15,
+    borderRadius: 8,
+    marginBottom: 20,
+  },
+  sectionTitle: {
+    color: '#ffffff',
+    fontSize: 20,
+    marginBottom: 10,
+  },
   projectList: {
-    width: '100%', // Full width for the FlatList
-    marginTop: 20,
+    width: '100%',
+    marginTop: 10,
   },
   flatListContent: {
-    paddingHorizontal: 0, // Ensure no horizontal padding
+    paddingHorizontal: 0,
   },
   projectItem: {
-    backgroundColor: '#Bc3908',
-    padding: 15,
+    flexDirection: 'row',
+    alignItems: 'center',
     marginVertical: 5,
-    marginHorizontal: 10,
     borderRadius: 5,
+  },
+  bullet: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#688e26',
+    marginRight: 10,
   },
   projectName: {
     color: '#ffffff',
     fontSize: 18,
-  },
-  sharedWith: {
-    color: '#ffffff',
-    fontSize: 14,
+    flex: 1,
   },
   noProjectsText: {
+    color: '#ffffff',
+    fontSize: 16,
+    marginTop: 20,
+  },
+  addProject: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  addProjectText: {
+    color: '#ffffff',
+    fontSize: 16,
+    marginLeft: 8,
+  },
+  noTasksText: {
+    color: '#ffffff',
+    fontSize: 16,
+    marginTop: 20,
+  },
+  noActivityText: {
     color: '#ffffff',
     fontSize: 16,
     marginTop: 20,

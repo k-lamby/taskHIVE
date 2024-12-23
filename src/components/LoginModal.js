@@ -5,7 +5,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Modal, StyleSheet, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import GlobalStyles from '../styles/styles';
-import { logIn } from '../services/firebaseService';
+import { logIn } from '../services/authService';
 import { useUser } from '../contexts/UserContext';
 
 const LoginModal = ({ visible, onClose, navigation }) => {
