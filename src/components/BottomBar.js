@@ -1,76 +1,90 @@
-//================== BottomBar.js===========================//
-import React from 'react';
+//================== BottomBar.js ===========================//
+// This is the tool bar at the bottom of the page
+// it is displayed throughout the application whenever the user is logged in
+//===============================================================//
+import React, {useState} from 'react';
 import { View, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import CreateProjectForm from './CreateProjectForm';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { faHouse, faClipboardCheck, faCirclePlus, faCircleCheck, faUser} from '@fortawesome/free-solid-svg-icons';
 
-const BottomBar = ({ navigation, activeScreen }) => {
+const BottomBar = ({ navigation, activeScreen, userId }) => {
+  // this stores the state of the modal form for creating a project
+  const [isFormVisible, setFormVisible] = useState(false);
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
+
         <TouchableOpacity 
-          onPress={() => navigation.navigate('Summary')}
-          style={[styles.iconContainer, activeScreen === 'Summary' && styles.activeIconContainer]}
-        >
-          <Ionicons 
-            name="home-outline" 
-            size={24} 
-            color={activeScreen === 'Summary' ? '#688e26' : 'rgba(255, 255, 255, 0.7)'} 
-          />
+            onPress={() => navigation.navigate('Summary')}
+            style={[styles.iconContainer, activeScreen === 'Summary' && styles.activeIconContainer]} >
+            <FontAwesomeIcon
+                icon = {faHouse}
+                size = {24}
+                style={[styles.icon, activeScreen === 'Summary' && styles.activeIcon]} />
         </TouchableOpacity>
 
         <TouchableOpacity 
           onPress={() => navigation.navigate('Projects')}
-          style={[styles.iconContainer, activeScreen === 'Projects' && styles.activeIconContainer]}
-        >
-          <Ionicons 
-            name="clipboard-outline" 
-            size={24} 
-            color={activeScreen === 'Projects' ? '#688e26' : 'rgba(255, 255, 255, 0.7)'} 
-          />
+          style={[styles.iconContainer, activeScreen === 'Projects' && styles.activeIconContainer]}    >
+                <FontAwesomeIcon
+            icon = {faClipboardCheck}
+            size = {24}
+            style={[styles.icon, activeScreen === 'Projects' && styles.activeIcon]} />
+         
         </TouchableOpacity>
 
         <TouchableOpacity 
-          onPress={() => navigation.navigate('CreateProject')}
-          style={[styles.iconContainer, activeScreen === 'CreateProject' && styles.activeIconContainer]}
+          onPress={() => setFormVisible(true)}
+          style={[styles.iconContainer]}
         >
-          <Ionicons 
-            name="add-circle-outline" 
-            size={24} 
-            color={activeScreen === 'CreateProject' ? '#688e26' : 'rgba(255, 255, 255, 0.7)'} 
-          />
+           <FontAwesomeIcon
+            icon = {faCirclePlus}
+            size = {24}
+            style={[styles.icon]} />
+         
         </TouchableOpacity>
 
         <TouchableOpacity 
           onPress={() => navigation.navigate('Tasks')}
           style={[styles.iconContainer, activeScreen === 'Tasks' && styles.activeIconContainer]}
         >
-          <Ionicons 
-            name="checkmark-circle-outline" 
-            size={24} 
-            color={activeScreen === 'Tasks' ? '#688e26' : 'rgba(255, 255, 255, 0.7)'} 
-          />
+           <FontAwesomeIcon
+            icon = {faCircleCheck}
+            size = {24}
+            style={[styles.icon, activeScreen === 'Tasks' && styles.activeIcon]} />
+         
         </TouchableOpacity>
 
         <TouchableOpacity 
           onPress={() => navigation.navigate('Settings')}
           style={[styles.iconContainer, activeScreen === 'Settings' && styles.activeIconContainer]}
         >
-          <Ionicons 
-            name="person-outline" 
-            size={24} 
-            color={activeScreen === 'Settings' ? '#688e26' : 'rgba(255, 255, 255, 0.7)'} 
-          />
+           <FontAwesomeIcon
+            icon = {faUser}
+            size = {24}
+            style={[styles.icon, activeScreen === 'Settings' && styles.activeIcon]} />
+       
         </TouchableOpacity>
+        <CreateProjectForm 
+        visible={isFormVisible} 
+        onClose={() => setFormVisible(false)} 
+        userId={userId}
+      />
       </View>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  // make sure we arent overlapping any graphics at the bottom of the screen
   safeArea: {
     backgroundColor: '#220901',
     width: '100%',
   },
+  // contents to be aligned vertically
+  // spaced evenly across the bottom of the page
   container: {
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -78,13 +92,27 @@ const styles = StyleSheet.create({
     backgroundColor: '#220901',
     paddingVertical: 10,
   },
+  // then create a transparent container for the icon to go in
+  // adds contrast
   iconContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)', // Semi-transparent white
-    borderRadius: 30, // Circle effect
-    padding: 10, // Padding for the circle
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 30, 
+    padding: 10, 
   },
+  // then set the default icon style
+  icon: {
+    fontSize: 60,
+    color: 'white'
+  },
+  // if the active screen corresponds to the container then we want to make sure
+  // this is communicated back to the user
   activeIconContainer: {
-    backgroundColor: 'rgba(104, 142, 38, 0.2)', // Green background for active icon
+    backgroundColor: 'rgba(104, 142, 38, 0.2)',
+  },
+  activeIcon: {
+    fontSize: 40,
+    color: 'rgba(104, 142, 38, 1)',
+
   },
 });
 

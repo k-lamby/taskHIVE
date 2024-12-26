@@ -6,7 +6,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert } from 'react-native';
 import GlobalStyles from '../styles/styles';
-import { fetchProjects } from '../services/authService';
+import { fetchProjects } from '../services/projectService';
 import { useUser } from '../contexts/UserContext';
 import TopBar from '../components/TopBar';
 import BottomBar from '../components/BottomBar';
@@ -43,13 +43,12 @@ const SummaryScreen = ({ navigation }) => {
       <Text style={GlobalStyles.normalText}>{item.name}</Text>
     </View>
     </TouchableOpacity>
-  );
+  ); 
 
   return (
     <GradientBackground>
       <TopBar title="Welcome, Katherine!" />
       <View style={styles.container}>
-        {/* Projects Section */}
         <View style={styles.projectsSection}>
           <Text style={GlobalStyles.subheaderText}>Current Projects</Text>
           {projects.length > 0 ? (
@@ -65,11 +64,16 @@ const SummaryScreen = ({ navigation }) => {
           )}
           <TouchableOpacity 
             style={styles.addProject} 
-            onPress={() => {/* navigation to add project */}}
+            onPress={() => {}}
           >
             <FontAwesomeIcon style={GlobalStyles.bulletStyle} icon={faPlus}  />
             <Text style={GlobalStyles.translucentText}>Add new project</Text>
           </TouchableOpacity>
+        </View> 
+
+        <View style={styles.tasksSection}>
+          <Text style={GlobalStyles.subheaderText}>Projects</Text>
+          <Text style={GlobalStyles.normalText}>No Projects</Text>
         </View>
 
         {/* Tasks Section */}

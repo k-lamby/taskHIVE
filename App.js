@@ -7,7 +7,6 @@ import { useFonts } from 'expo-font';
 import HomeScreen from './src/screens/HomeScreen';
 import SummaryScreen from './src/screens/SummaryScreen';
 import SignupScreen from './src/screens/SignupScreen';
-import CreateProjectScreen from './src/screens/CreateProjectScreen';
 import ProjectsScreen from './src/screens/ProjectsScreen';
 import TasksScreen from './src/screens/TasksScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
@@ -34,11 +33,10 @@ export default function App() {
           <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Signup" component={SignupScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Summary" component={SummaryScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="CreateProject" component={CreateProjectScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Projects" component={ProjectsScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Tasks" component={TasksScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="ProjectDetail" component={ProjectDetailScreen} options={{ headerShown: true }} />
+          <Stack.Screen name="ProjectDetail" component={ProjectDetailScreen} options={{ headerShown: false }} />
         </Stack.Navigator>
       </UserProvider>
     </NavigationContainer>

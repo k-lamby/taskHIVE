@@ -2,8 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, Button, FlatList, StyleSheet } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import { fetchTasks, createTask } from '../services/taskService';
+import TopBar from '../components/TopBar';
+import BottomBar from '../components/BottomBar';
+import GradientBackground from "../components/GradientBackground"; 
+import GlobalStyles from '../styles/styles';
 
-const ProjectDetailScreen = () => {
+const ProjectDetailScreen = ({ navigation }) => {
   const route = useRoute();
   const { projectId } = route.params; // Get projectId from navigation params
   const [tasks, setTasks] = useState([]);
@@ -41,8 +45,10 @@ const ProjectDetailScreen = () => {
   };
 
   return (
+    <GradientBackground>
+      <TopBar title="Banana Project" />
     <View style={styles.container}>
-      <Text style={styles.header}>Project Tasks</Text>
+      <Text style={GlobalStyles.normalText}>Project Tasks</Text>
       <TextInput
         style={styles.input}
         placeholder="Task Name"
@@ -68,14 +74,17 @@ const ProjectDetailScreen = () => {
         )}
       />
     </View>
+    <BottomBar navigation={navigation} activeScreen="Summary" />
+    </GradientBackground>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { padding: 20 },
-  header: { fontSize: 24, marginBottom: 20 },
-  input: { borderColor: 'gray', borderWidth: 1, marginBottom: 10, padding: 10 },
-  taskItem: { padding: 10, borderBottomWidth: 1, borderBottomColor: '#ccc' },
+  container: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
 });
 
 export default ProjectDetailScreen;
