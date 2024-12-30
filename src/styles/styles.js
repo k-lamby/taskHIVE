@@ -24,22 +24,25 @@ const GlobalStyles = StyleSheet.create({
     margin: 0
   },
   // ===== REUSABLE TEXT STYLES ===== //
-  // used for main te
+  // used for page headers
   headerText: {
     color: '#ffffff',
-    fontSize:40,
+    fontSize:22,
     fontFamily: 'Akzidenz-grotesk-light', 
   },
+  // sub title text
   subheaderText: {
     color: '#ffffff',
     fontSize:18,
     fontFamily: 'Akzidenz-grotesk-light', 
   },
+  // normal fonts
   normalText: {
     color: '#ffffff',
     fontSize:16,
     fontFamily: 'Akzidenz-grotesk-light', 
   },
+  // translucent normal text for inputs etc
   translucentText: {
     color: 'rgba(255, 255, 255, 0.7)',
     fontSize:16,
@@ -83,17 +86,28 @@ const GlobalStyles = StyleSheet.create({
     fontSize: 22,
     fontFamily: 'Akzidenz-grotesk-light', 
   },
+  inputContainer: {
+      backgroundColor: 'rgba(255, 255, 255, 0.5)',
+      marginBottom: 10,
+      padding: 10,
+      borderRadius: 20,
+      width: '100%',
+      justifyContent: 'flex-start'
+  },
   textInput: {
     width: '90%',
     padding: 15, 
     backgroundColor: 'rgba(255, 255, 255, 0.5)',
     borderRadius: 10,
     alignItems: 'center',
-    justifyContent: 'center',
+    alignSelf: 'flex-start',
     marginVertical: 10,
     color: '#000000',
     borderWidth: 1,
     borderColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  label: {
+    alignSelf:'flex-start'
   },
   gradientContainer: {
     flex: 1,

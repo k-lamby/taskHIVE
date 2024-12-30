@@ -4,18 +4,29 @@
 //===============================================================//
 import React, {useState} from 'react';
 import { View, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
-import CreateProjectForm from './CreateProjectForm';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faHouse, faClipboardCheck, faCirclePlus, faCircleCheck, faUser} from '@fortawesome/free-solid-svg-icons';
 
+import CreateProjectModal from './CreateProjectModal';
+
 const BottomBar = ({ navigation, activeScreen, userId }) => {
-  // this stores the state of the modal form for creating a project
+  // this stores the visibility of the add project form
   const [isFormVisible, setFormVisible] = useState(false);
 
   return (
+    //make sure this is rendered within the viewable area of the device
     <SafeAreaView style={styles.safeArea}>
+      <View>
+      {/* Create project modal attached to the bottom bar */}
+      <CreateProjectModal 
+        visible={isFormVisible} 
+        onClose={() => setFormVisible(false)} 
+        userId={userId}
+      />
+      </View>
+      {/* For each icon we check to see if its associated with the current page
+      this then displays it a different colour to help with navigation around the application */}
       <View style={styles.container}>
-
         <TouchableOpacity 
             onPress={() => navigation.navigate('Summary')}
             style={[styles.iconContainer, activeScreen === 'Summary' && styles.activeIconContainer]} >
@@ -67,11 +78,6 @@ const BottomBar = ({ navigation, activeScreen, userId }) => {
             style={[styles.icon, activeScreen === 'Settings' && styles.activeIcon]} />
        
         </TouchableOpacity>
-        <CreateProjectForm 
-        visible={isFormVisible} 
-        onClose={() => setFormVisible(false)} 
-        userId={userId}
-      />
       </View>
     </SafeAreaView>
   );

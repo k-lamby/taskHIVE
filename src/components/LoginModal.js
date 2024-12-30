@@ -9,7 +9,8 @@ import { logIn } from '../services/authService';
 import { useUser } from '../contexts/UserContext';
 
 const LoginModal = ({ visible, onClose, navigation }) => {
-  const usernameInputRef = useRef(null); // Reference for the username input
+  // set up various states for grabbing the login details
+  const usernameInputRef = useRef(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { setUserId } = useUser();
@@ -17,23 +18,31 @@ const LoginModal = ({ visible, onClose, navigation }) => {
 
   useEffect(() => {
     if (visible) {
-      // Focus the username input when the modal is visible
+      // When opening the modal, start with cursor in the email box
+      // add a short delay to ensure the component is rendered before
+      //focusing
       setTimeout(() => {
         usernameInputRef.current?.focus();
-      }, 100); // Delay to ensure the modal is fully rendered
+      }, 100);
     }
   }, [visible]);
 
+  // handle the login functionality
   const handleLogin = async () => {
     try {
-      const userId = await logIn(email, password); // Attempt to sign in
-      console.log(userId)
-      setUserId(userId.uid); // Set user ID in context
-      setUserEmail(userId.email); // Set user ID in context
-      onClose(); // Close modal after login
-      navigation.navigate('Summary'); // Navigate to the Summary screen
+      // call login from the auth service passing it the inputs
+      // wait for the response
+      const userId = await logIn(email, password);
+      // set the user information
+      setUserId(userId.uid);
+      setUserEmail(userId.email);
+      // close the modal after login
+      onClose(); 
+      // then navigate to the summary page
+      navigation.navigate('Summary');
     } catch (error) {
-      Alert.alert("Login Error", error.message); // Show error if login fails
+      // if there is error with the login just display an alert for now
+      Alert.alert("Login Error", error.message);
     }
   };
 
@@ -47,7 +56,7 @@ const LoginModal = ({ visible, onClose, navigation }) => {
       <TouchableOpacity 
         style={styles.container} 
         activeOpacity={1} 
-        onPressOut={onClose} // Close modal on outside press
+        onPressOut={onClose}
       >
         <View style={styles.modalContainer}>
           <KeyboardAvoidingView 
@@ -56,12 +65,12 @@ const LoginModal = ({ visible, onClose, navigation }) => {
           >
             <Text style={GlobalStyles.headerText}>Login</Text>
             <TextInput 
-              ref={usernameInputRef} // Set the reference for the username input
+              ref={usernameInputRef}
               style={GlobalStyles.textInput} 
               placeholder="Email" 
               placeholderTextColor="#ffffff" 
               value={email}
-              onChangeText={setEmail} // Handle email input
+              onChangeText={setEmail}
               accessibilityLabel="Email input"
               accessibilityHint="Enter your email"
             />
@@ -71,13 +80,13 @@ const LoginModal = ({ visible, onClose, navigation }) => {
               placeholderTextColor="#ffffff" 
               secureTextEntry 
               value={password}
-              onChangeText={setPassword} // Handle password input
+              onChangeText={setPassword}
               accessibilityLabel="Password input"
               accessibilityHint="Enter your password"
             />
             <TouchableOpacity 
               style={GlobalStyles.primaryButton} 
-              onPress={handleLogin} // Call handleLogin on press
+              onPress={handleLogin}
               accessibilityLabel="Login button"
               accessibilityHint="Tap to log in"
             >

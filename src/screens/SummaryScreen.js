@@ -5,14 +5,15 @@
 
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert } from 'react-native';
-import GlobalStyles from '../styles/styles';
-import { fetchProjects } from '../services/projectService';
-import { useUser } from '../contexts/UserContext';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { faBolt, faPlus } from '@fortawesome/free-solid-svg-icons';
+
 import TopBar from '../components/TopBar';
 import BottomBar from '../components/BottomBar';
 import GradientBackground from "../components/GradientBackground"; 
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faBolt, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { fetchProjects } from '../services/projectService';
+import { useUser } from '../contexts/UserContext';
+import GlobalStyles from '../styles/styles';
 
 const SummaryScreen = ({ navigation }) => {
   const [projects, setProjects] = useState([]);
@@ -70,11 +71,6 @@ const SummaryScreen = ({ navigation }) => {
             <Text style={GlobalStyles.translucentText}>Add new project</Text>
           </TouchableOpacity>
         </View> 
-
-        <View style={styles.tasksSection}>
-          <Text style={GlobalStyles.subheaderText}>Projects</Text>
-          <Text style={GlobalStyles.normalText}>No Projects</Text>
-        </View>
 
         {/* Tasks Section */}
         <View style={styles.tasksSection}>

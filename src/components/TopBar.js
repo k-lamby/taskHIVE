@@ -11,7 +11,7 @@ const TopBar = ({ title }) => {
   return (
     <SafeAreaView style={styles.safeArea}>
         <View style={styles.container}>
-            <Text style={GlobalStyles.primaryButtonText}>{title}</Text>
+            <Text style={GlobalStyles.headerText}>{title}</Text>
         </View>
     </SafeAreaView>
   );
