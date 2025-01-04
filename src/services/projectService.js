@@ -1,75 +1,127 @@
-//================== projectService.js===========================//
-// Here we handle the logic associated creating and accessing projects
-// from firestore
-//===============================================================//
+//==============================//
+// projectService.js            //
+//==============================//
+// This module handles the logic for creating and accessing projects
+// in Firestore. It includes functions for adding a new project,
+// as well as fetching projects created by or shared with a user.
+//==============================//
 
-import { db } from '../config/firebaseConfig';
-import { collection, addDoc, getDocs } from 'firebase/firestore'; 
-import { getAuth } from 'firebase/auth';
+import { db } from "../config/firebaseConfig"; // Ensure your Firebase config is set up correctly
+import {
+  collection,
+  where,
+  query,
+  addDoc,
+  getDocs,
+  serverTimestamp,
+} from "firebase/firestore"; // Import Firestore functions
+import { getAuth } from "firebase/auth"; // Import Firebase Auth
 
-// get the authentication instance for authorisation
-const auth = getAuth();
+//==============================//
+// Firebase Authentication Setup
+//==============================//
+const auth = getAuth(); // Get the authentication instance for user authorization
 
-// Handler for adding a new project to the database
-// async function so this can happen while the user navigates around
-// the application
-const createProject = async (projectName, sharedWith, dueDate) => {
-    // first check to make sure the user is authenticated
-    try {
-      const user = auth.currentUser;
-      if (!user) {
-        throw new Error("User not authenticated");
+/**
+ * Create a new project in Firestore.
+ * @param {string} projectName - The name of the project.
+ * @param {string} sharedWith - Comma-separated string of emails to share the project with.
+ * @param {string|Date|null} dueDate - The project due date (optional).
+ * @returns {Promise<string>} - Returns the ID of the newly created project.
+ */
+const createProject = async (projectData) => {
+  try {
+    const { name, sharedWith, dueDate, createdBy, description, attachments } =
+      projectData;
+
+    // Validate `name`
+    if (!name || typeof name !== "string" || !name.trim()) {
+      throw new Error("Invalid project name. It must be a non-empty string.");
+    }
+
+    // Validate `dueDate`
+    let validDueDate = null;
+    if (dueDate) {
+      validDueDate = new Date(dueDate);
+      if (isNaN(validDueDate.getTime())) {
+        throw new Error("Invalid due date format. Please provide a valid date.");
       }
-      // get the authenticated user id
-      const userId = user.uid; 
-
-      // add the project to the projects collection.
-      // we allow multiple users to be added by email address, so split them by a ,
-      // we will do a more controlled method of this in a future iteration
-      const docRef = await addDoc(collection(db, 'projects'), {
-        name: projectName,
-        createdBy: userId,
-        sharedWith: sharedWith.split(',').map(email => email.trim()),
-        createdAt: new Date(),
-        dueDate: new Date(dueDate)
-      });
-      return docRef.id; 
-    } catch (error) {
-      // basic error handling we will expand this to be more sophisticated later
-      console.error("Error creating project: ", error);
-      throw error;
     }
+
+    // Add project to Firestore
+    const docRef = await addDoc(collection(db, "projects"), {
+      name: name.trim(),
+      createdBy,
+      sharedWith: Array.isArray(sharedWith) ? sharedWith : [],
+      description: description || "",
+      attachments: attachments || [],
+      createdAt: serverTimestamp(),
+      dueDate: validDueDate || serverTimestamp(),
+    });
+
+    return docRef.id;
+  } catch (error) {
+    console.error("Error creating project: ", error);
+    throw error;
+  }
 };
 
-// Function to get all the projects for the particular user
-// Function to fetch projects created by the user or shared with them
+/**
+ * Fetch all projects associated with a user.
+ * This includes projects created by the user and projects shared with the user.
+ * @param {string} userId - The unique ID of the user.
+ * @param {string} userEmail - The email address of the user.
+ * @returns {Promise<Array>} - Returns an array of unique projects.
+ */
 const fetchProjects = async (userId, userEmail) => {
-    try {
-      // for now get all the projects, probably a more scalable way to do this
-      const querySnapshot = await getDocs(collection(db, 'projects'));
-      const projects = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
+  try {
+    // Query for projects created by the user
+    const createdByQuery = query(
+      collection(db, "projects"),
+      where("createdBy", "==", userId)
+    );
 
-      return projects.filter(project => {
-        // the user id needs to be checked against the current user
-        const isCreatedByUser = project.createdBy === userId;
-        // Split sharedWith string into an array and check if userId is included
-        // we then need to see if there is any match on the shared emails
-        // need to handle the shared emails field being empty
-        console.log(project.sharedWith);
-        const isSharedWithUser = Array.isArray(project.sharedWith) && project.sharedWith.length > 0
-        ? project.sharedWith.some(email => email.trim() === userEmail.trim())
-        : false;
+    // Query for projects shared with the user
+    const sharedWithQuery = query(
+      collection(db, "projects"),
+      where("sharedWith", "array-contains", userEmail.trim())
+    );
 
-        return isCreatedByUser || isSharedWithUser;
-      });
-    } catch (error) {
-      console.error("Error fetching projects: ", error);
-      throw error;
-    }
+    // Execute both queries in parallel
+    const [createdBySnapshot, sharedWithSnapshot] = await Promise.all([
+      getDocs(createdByQuery),
+      getDocs(sharedWithQuery),
+    ]);
+
+    // Map Snapshots to Project Objects
+    const createdByProjects = createdBySnapshot.docs.map((doc) => ({
+      id: doc.id, // Include the document ID
+      ...doc.data(), // Spread the document data
+    }));
+
+    const sharedWithProjects = sharedWithSnapshot.docs.map((doc) => ({
+      id: doc.id, // Include the document ID
+      ...doc.data(), // Spread the document data
+    }));
+
+    // Combine Results and Remove Duplicates
+    const allProjects = [
+      ...createdByProjects,
+      ...sharedWithProjects,
+    ].reduce((acc, project) => {
+      acc[project.id] = project; // Use project ID as the key to ensure uniqueness
+      return acc;
+    }, {});
+
+    // Return an array of unique projects
+    return Object.values(allProjects);
+  } catch (error) {
+    console.error("Error fetching projects: ", error);
+    throw error; // Re-throw the error for higher-level handling
+  }
 };
 
-// export only the functions that need to be used outside of this
+//==============================//
+// Export Functions
+//==============================//
 export { createProject, fetchProjects };

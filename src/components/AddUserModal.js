@@ -1,18 +1,36 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, Modal, TouchableWithoutFeedback, TouchableOpacity, Keyboard } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  Modal,
+  TouchableWithoutFeedback,
+  TouchableOpacity,
+  Keyboard,
+  Alert,
+} from 'react-native';
 import GlobalStyles from '../styles/styles';
 
 const AddUserModal = ({ visible, onClose, onUserAdded }) => {
   const [userEmail, setUserEmail] = useState('');
 
   const handleAddUser = () => {
-    if (userEmail.trim() === '') {
-      return; // Avoid adding empty email
+    // Validate email input
+    if (!userEmail.trim()) {
+      Alert.alert('Invalid Input', 'Please enter a valid email address.');
+      return; // Prevent adding an empty or invalid email
     }
-    
-    onUserAdded(prev => [...prev, userEmail]); // Add user to the parent component's state
-    setUserEmail(''); // Clear input
-    onClose(); // Close modal after adding user
+
+    // Log the email for debugging
+    console.log('Adding user:', userEmail);
+
+    // Pass the email to the parent callback
+    onUserAdded(userEmail.trim());
+
+    // Reset the input field and close the modal
+    setUserEmail('');
+    onClose();
   };
 
   return (
@@ -20,7 +38,7 @@ const AddUserModal = ({ visible, onClose, onUserAdded }) => {
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.overlay}>
           <View style={styles.modalContainer}>
-            <Text style={GlobalStyles.headerText}>Add Users to Project</Text>
+            <Text style={GlobalStyles.headerText}>Add User</Text>
             <TextInput
               style={GlobalStyles.inputContainer}
               placeholder="Enter User Email"

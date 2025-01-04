@@ -1,90 +1,178 @@
-//================== SummaryScreen.js ===========================//
-// This shows a summary of the user's projects and tasks for now.
-// It will just show projects for now; we will expand this for the final version.
-//===============================================================//
+import React, { useEffect, useState, useCallback } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  FlatList,
+  ActivityIndicator,
+} from "react-native";
+import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
+import { faBolt, faPlus } from "@fortawesome/free-solid-svg-icons";
 
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert } from 'react-native';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faBolt, faPlus } from '@fortawesome/free-solid-svg-icons';
-
-import TopBar from '../components/TopBar';
-import BottomBar from '../components/BottomBar';
-import GradientBackground from "../components/GradientBackground"; 
-import { fetchProjects } from '../services/projectService';
-import { useUser } from '../contexts/UserContext';
-import GlobalStyles from '../styles/styles';
+import TopBar from "../components/TopBar";
+import BottomBar from "../components/BottomBar";
+import GradientBackground from "../components/GradientBackground";
+import CreateProjectModal from "../components/CreateProjectModal";
+import { fetchProjects } from "../services/projectService";
+import { fetchTasksWithSubtasksByOwner } from "../services/taskService";
+import { fetchRecentActivities } from "../services/activityService";
+import { useUser } from "../contexts/UserContext";
+import GlobalStyles from "../styles/styles";
 
 const SummaryScreen = ({ navigation }) => {
   const [projects, setProjects] = useState([]);
+  const [tasks, setTasks] = useState([]);
+  const [activities, setActivities] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Modal state for creating a project
+  const [isFormVisible, setFormVisible] = useState(false);
+
+  // Get the logged-in user's details from the UserContext
   const { userId, userEmail } = useUser();
 
   useEffect(() => {
-    const getProjects = async () => {
-      if (!userId) {
-        Alert.alert("Error", "User is not logged in.");
-        return;
-      }
+    const fetchData = async () => {
       try {
+        setLoading(true);
+
         const projectData = await fetchProjects(userId, userEmail);
-        setProjects(projectData); 
-      } catch (error) {
-        Alert.alert("Error", "Failed to fetch projects.");
-        console.error(error);
+        const sortedProjects = projectData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        setProjects(sortedProjects.slice(0, 3)); // Top 3 projects
+
+        const userTasks = await fetchTasksWithSubtasksByOwner(userId);
+        const sortedTasks = userTasks.sort((a, b) => new Date(b.dueDate) - new Date(a.dueDate));
+        setTasks(sortedTasks.slice(0, 3)); // Top 3 tasks
+
+        const recentActivities = await fetchRecentActivities(userId);
+        const sortedActivities = recentActivities.sort(
+          (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
+        );
+        setActivities(sortedActivities.slice(0, 3));
+      } catch (err) {
+        console.error("Error fetching data:", err);
+        setError("Failed to load data. Please try again.");
+      } finally {
+        setLoading(false);
       }
     };
 
-    getProjects();
+    fetchData();
   }, [userId, userEmail]);
 
-  const renderProjectItem = ({ item }) => (
-    <TouchableOpacity onPress={() => navigation.navigate('ProjectDetail', { projectId: item.id })}>
-    <View style={styles.projectItem}>
-      <FontAwesomeIcon style={GlobalStyles.bulletStyle} icon={faBolt}  />
-      <Text style={GlobalStyles.normalText}>{item.name}</Text>
+  const renderProjectItem = useCallback(
+    ({ item }) => (
+      <TouchableOpacity onPress={() => navigation.navigate("ProjectDetail", { projectId: item.id, projectName: item.name })}>
+        <View style={styles.projectItem}>
+          <FontAwesomeIcon style={GlobalStyles.bulletStyle} icon={faBolt} />
+          <Text style={GlobalStyles.normalText}>{item.name}</Text>
+        </View>
+      </TouchableOpacity>
+    ),
+    [navigation]
+  );
+
+  const renderTaskItem = ({ item }) => (
+    <View style={styles.taskItem}>
+      <Text style={GlobalStyles.headerText}>{item.name}</Text>
+      <Text style={GlobalStyles.translucentText}>Due: {new Date(item.dueDate).toLocaleDateString()}</Text>
     </View>
-    </TouchableOpacity>
-  ); 
+  );
+
+  const renderActivityItem = ({ item }) => (
+    <View style={styles.activityItem}>
+      <Text style={GlobalStyles.normalText}>Activity: {item.description}</Text>
+      <Text style={GlobalStyles.translucentText}>
+        Timestamp: {new Date(item.timestamp).toLocaleDateString()} {new Date(item.timestamp).toLocaleTimeString()}
+      </Text>
+    </View>
+  );
 
   return (
     <GradientBackground>
-      <TopBar title="Welcome, Katherine!" />
+      {/* Top navigation bar */}
+      <TopBar title={`Welcome, ${userEmail || "User"}!`} />
+
       <View style={styles.container}>
-        <View style={styles.projectsSection}>
-          <Text style={GlobalStyles.subheaderText}>Current Projects</Text>
-          {projects.length > 0 ? (
+        {/* Projects Section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={GlobalStyles.subheaderText}>Featured Projects</Text>
+            {/* Add Project Button */}
+            <TouchableOpacity onPress={() => setFormVisible(true)}>
+              <FontAwesomeIcon icon={faPlus} size={24} style={styles.addIcon} />
+            </TouchableOpacity>
+          </View>
+
+          {loading ? (
+            <ActivityIndicator size="medium" color="#ffffff" />
+          ) : error ? (
+            <Text style={GlobalStyles.translucentText}>{error}</Text>
+          ) : projects.length > 0 ? (
             <FlatList
               data={projects}
               renderItem={renderProjectItem}
-              keyExtractor={item => item.id}
+              keyExtractor={(item) => item.id}
               style={styles.projectList}
               contentContainerStyle={styles.flatListContent}
             />
           ) : (
-            <Text style={styles.normalText}>No projects created yet.</Text>
+            <Text style={GlobalStyles.translucentText}>No projects found.</Text>
           )}
-          <TouchableOpacity 
-            style={styles.addProject} 
-            onPress={() => {}}
+
+          {/* See All Projects Button */}
+          <TouchableOpacity
+            style={[styles.seeAllButton]}
+            onPress={() => navigation.navigate("Projects")}
           >
-            <FontAwesomeIcon style={GlobalStyles.bulletStyle} icon={faPlus}  />
-            <Text style={GlobalStyles.translucentText}>Add new project</Text>
+            <Text style={styles.seeAllButtonText}>See All Projects</Text>
           </TouchableOpacity>
-        </View> 
+        </View>
 
         {/* Tasks Section */}
-        <View style={styles.tasksSection}>
-          <Text style={GlobalStyles.subheaderText}>Tasks</Text>
-          <Text style={GlobalStyles.normalText}>No tasks</Text>
+        <View style={styles.section}>
+          <Text style={GlobalStyles.subheaderText}>Your Tasks</Text>
+          {loading ? (
+            <ActivityIndicator size="medium" color="#ffffff" />
+          ) : tasks.length > 0 ? (
+            <FlatList data={tasks} renderItem={renderTaskItem} keyExtractor={(item) => item.id} />
+          ) : (
+            <Text style={GlobalStyles.translucentText}>No tasks found.</Text>
+          )}
         </View>
 
-        {/* Recent Activity Section */}
-        <View style={styles.activitySection}>
-          <Text style={GlobalStyles.subheaderText}>Recent Activity</Text>
-          <Text style={GlobalStyles.normalText}>No activity</Text>
+        {/* Activities Section */}
+        <View style={styles.section}>
+          <Text style={GlobalStyles.subheaderText}>Recent Activities</Text>
+          {loading ? (
+            <ActivityIndicator size="medium" color="#ffffff" />
+          ) : activities.length > 0 ? (
+            <FlatList
+              data={activities}
+              renderItem={renderActivityItem}
+              keyExtractor={(item) => item.id}
+            />
+          ) : (
+            <Text style={GlobalStyles.translucentText}>No activities found.</Text>
+          )}
         </View>
       </View>
-      <BottomBar navigation={navigation} activeScreen="Summary" />
+
+      {/* Bottom navigation bar */}
+      <BottomBar
+        navigation={navigation}
+        activeScreen="Summary"
+        setFormVisible={setFormVisible}
+      />
+
+      {/* Create Project Modal */}
+      <CreateProjectModal
+        visible={isFormVisible}
+        onClose={() => setFormVisible(false)}
+        userId={userId}
+      />
     </GradientBackground>
   );
 };
@@ -95,78 +183,40 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 20,
   },
-  projectsSection: {
-    backgroundColor: 'rgba(34, 9, 1, 0.5)',
+  section: {
+    backgroundColor: "rgba(34, 9, 1, 0.5)",
     padding: 15,
     borderRadius: 8,
     marginBottom: 20,
   },
-  tasksSection: {
-    backgroundColor: 'rgba(104, 142, 38, 0.5)',
-    padding: 15,
-    borderRadius: 8,
-    marginBottom: 20,
-  },
-  activitySection: {
-    backgroundColor: 'rgba(248, 148, 59, 0.5)',
-    padding: 15,
-    borderRadius: 8,
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    color: '#ffffff',
-    fontSize: 20,
-    marginBottom: 10,
-  },
-  projectList: {
-    width: '100%',
-    marginTop: 10,
-  },
-  flatListContent: {
-    paddingHorizontal: 0,
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   projectItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginVertical: 5,
     borderRadius: 5,
   },
-  bullet: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: '#688e26',
-    marginRight: 10,
+  addIcon: {
+    color: "white",
   },
-  projectName: {
-    color: '#ffffff',
-    fontSize: 18,
-    flex: 1,
+  flatListContent: {
+    paddingTop: 3,
   },
-  noProjectsText: {
-    color: '#ffffff',
+  seeAllButton: {
+    alignSelf: "flex-start",
+    backgroundColor: "#688e26",
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 5,
+  },
+  seeAllButtonText: {
+    color: "white",
     fontSize: 16,
-    marginTop: 20,
-  },
-  addProject: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  addProjectText: {
-    color: '#ffffff',
-    fontSize: 16,
-    marginLeft: 8,
-  },
-  noTasksText: {
-    color: '#ffffff',
-    fontSize: 16,
-    marginTop: 20,
-  },
-  noActivityText: {
-    color: '#ffffff',
-    fontSize: 16,
-    marginTop: 20,
+    textAlign: "center",
   },
 });
 
