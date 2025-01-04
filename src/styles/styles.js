@@ -42,6 +42,12 @@ const GlobalStyles = StyleSheet.create({
     fontSize:16,
     fontFamily: 'Akzidenz-grotesk-light', 
   },
+  // normal fonts
+  normalTextBlack: {
+    color: '#000000',
+    fontSize:16,
+    fontFamily: 'Akzidenz-grotesk-light', 
+  },
   // translucent normal text for inputs etc
   translucentText: {
     color: 'rgba(255, 255, 255, 0.7)',
@@ -85,6 +91,26 @@ const GlobalStyles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 22,
     fontFamily: 'Akzidenz-grotesk-light', 
+  },
+  smallSecondaryButton: {
+    backgroundColor: '#688e26',
+    padding: 10,
+    borderRadius: 5,
+    flex: 1,
+    marginRight: 10,
+    marginLeft: 10
+  },
+  smallPrimaryButton: {
+      backgroundColor: '#Bc3908',
+      padding: 10,
+      borderRadius: 5,
+      flex: 1,
+      marginRight: 10,
+      marginLeft: 10,
+  },
+  smallButtonText: {
+      color: 'white',
+      textAlign: 'center',
   },
   inputContainer: {
       backgroundColor: 'rgba(255, 255, 255, 0.5)',

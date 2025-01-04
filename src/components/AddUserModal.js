@@ -4,8 +4,6 @@ import GlobalStyles from '../styles/styles';
 
 const AddUserModal = ({ visible, onClose, onUserAdded }) => {
   const [userEmail, setUserEmail] = useState('');
-  const [userList] = useState(['user@example.com', 'test@example.com', 'alice@example.com', 'bob@example.com']); // Example users
-  const [filteredUsers, setFilteredUsers] = useState([]);
 
   const handleAddUser = () => {
     if (userEmail.trim() === '') {
@@ -17,39 +15,29 @@ const AddUserModal = ({ visible, onClose, onUserAdded }) => {
     onClose(); // Close modal after adding user
   };
 
-  const handleSearch = (email) => {
-    setUserEmail(email);
-    const filtered = userList.filter(user => user.includes(email));
-    setFilteredUsers(filtered);
-  };
-
   return (
     <Modal transparent={true} visible={visible} animationType="slide">
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.overlay}>
           <View style={styles.modalContainer}>
-            <Text style={styles.modalHeader}>Add Users to Project</Text>
+            <Text style={GlobalStyles.headerText}>Add Users to Project</Text>
             <TextInput
               style={GlobalStyles.inputContainer}
-              placeholder="Search Users by Email"
+              placeholder="Enter User Email"
               value={userEmail}
-              onChangeText={handleSearch}
+              onChangeText={setUserEmail}
+              autoCapitalize="none"
+              keyboardType="email-address"
+              textContentType="emailAddress"
             />
-            <TouchableOpacity onPress={handleAddUser} style={styles.addButton}>
-              <Text style={GlobalStyles.primaryButtonText}>Add User</Text>
-            </TouchableOpacity>
-            <View style={styles.userList}>
-              {filteredUsers.length > 0 ? (
-                filteredUsers.map((user, index) => (
-                  <Text key={index} style={styles.user}>{user}</Text>
-                ))
-              ) : (
-                <Text style={styles.noUserText}>No users found</Text>
-              )}
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity onPress={handleAddUser} style={GlobalStyles.smallPrimaryButton}>
+                <Text style={GlobalStyles.smallButtonText}>Add User</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={onClose} style={GlobalStyles.smallSecondaryButton}>
+                <Text style={GlobalStyles.smallButtonText}>Close</Text>
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <Text style={GlobalStyles.secondaryButtonText}>Close</Text>
-            </TouchableOpacity>
           </View>
         </View>
       </TouchableWithoutFeedback>
@@ -66,40 +54,15 @@ const styles = StyleSheet.create({
   modalContainer: {
     margin: 20,
     padding: 20,
-    backgroundColor: '#e87722',
+    backgroundColor: '#220901',
     borderRadius: 10,
-  },
-  modalHeader: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
-  userList: {
-    marginTop: 10,
-    maxHeight: 150,
-    overflow: 'scroll',
-  },
-  user: {
-    color: 'white',
-    padding: 10,
-  },
-  noUserText: {
-    color: 'white',
-    textAlign: 'center',
-  },
-  addButton: {
-    backgroundColor: '#4CAF50', // Example color
-    padding: 10,
-    borderRadius: 5,
-    marginVertical: 10,
     alignItems: 'center',
   },
-  closeButton: {
-    backgroundColor: '#f44336', // Example color
-    padding: 10,
-    borderRadius: 5,
-    marginVertical: 10,
-    alignItems: 'center',
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginTop: 20,
   },
 });
 
