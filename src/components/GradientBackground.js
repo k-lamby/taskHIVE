@@ -7,7 +7,7 @@ import GlobalStyles from '../styles/styles'; // Adjust the path as necessary
 const GradientBackground = ({ children }) => {
   return (
     <LinearGradient
-      colors={["#220901", "#Bc3908"]}
+      colors={["#001524", "#15616D"]}
       style={GlobalStyles.gradientContainer}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 0 }}

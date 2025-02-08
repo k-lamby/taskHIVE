@@ -1,20 +1,19 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   FlatList,
   ActivityIndicator,
+  StyleSheet,
 } from "react-native";
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
 import { faBolt, faPlus } from "@fortawesome/free-solid-svg-icons";
 
 import TopBar from "../components/TopBar";
 import BottomBar from "../components/BottomBar";
-import GradientBackground from "../components/GradientBackground";
 import CreateProjectModal from "../components/CreateProjectModal";
-import { fetchProjects } from "../services/projectService";
+import useProjectService from "../services/projectService";
 import { fetchTasksWithSubtasksByOwner } from "../services/taskService";
 import { fetchRecentActivities } from "../services/activityService";
 import { useUser } from "../contexts/UserContext";
@@ -26,197 +25,204 @@ const SummaryScreen = ({ navigation }) => {
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // Modal state for creating a project
   const [isFormVisible, setFormVisible] = useState(false);
 
-  // Get the logged-in user's details from the UserContext
-  const { userId, userEmail } = useUser();
+  const { userId, userEmail, firstName } = useUser();
+  const { fetchProjects } = useProjectService();
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!userId || !userEmail) {
+        console.warn("User ID or email is missing. Skipping fetch.");
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
 
-        const projectData = await fetchProjects(userId, userEmail);
-        const sortedProjects = projectData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        setProjects(sortedProjects.slice(0, 3)); // Top 3 projects
+        const projectData = await fetchProjects();
+        setProjects(projectData.slice(0, 3));
 
         const userTasks = await fetchTasksWithSubtasksByOwner(userId);
-        const sortedTasks = userTasks.sort((a, b) => new Date(b.dueDate) - new Date(a.dueDate));
-        setTasks(sortedTasks.slice(0, 3)); // Top 3 tasks
+        setTasks(userTasks.slice(0, 3));
 
         const recentActivities = await fetchRecentActivities(userId);
-        const sortedActivities = recentActivities.sort(
-          (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
-        );
-        setActivities(sortedActivities.slice(0, 3));
+        setActivities(recentActivities.slice(0, 3));
       } catch (err) {
         console.error("Error fetching data:", err);
-        setError("Failed to load data. Please try again.");
+        setError("Failed to load data.");
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [userId, userEmail]);
-
-  const renderProjectItem = useCallback(
-    ({ item }) => (
-      <TouchableOpacity onPress={() => navigation.navigate("ProjectDetail", { projectId: item.id, projectName: item.name })}>
-        <View style={styles.projectItem}>
-          <FontAwesomeIcon style={GlobalStyles.bulletStyle} icon={faBolt} />
-          <Text style={GlobalStyles.normalText}>{item.name}</Text>
-        </View>
-      </TouchableOpacity>
-    ),
-    [navigation]
-  );
-
-  const renderTaskItem = ({ item }) => (
-    <View style={styles.taskItem}>
-      <Text style={GlobalStyles.headerText}>{item.name}</Text>
-      <Text style={GlobalStyles.translucentText}>Due: {new Date(item.dueDate).toLocaleDateString()}</Text>
-    </View>
-  );
-
-  const renderActivityItem = ({ item }) => (
-    <View style={styles.activityItem}>
-      <Text style={GlobalStyles.normalText}>Activity: {item.description}</Text>
-      <Text style={GlobalStyles.translucentText}>
-        Timestamp: {new Date(item.timestamp).toLocaleDateString()} {new Date(item.timestamp).toLocaleTimeString()}
-      </Text>
-    </View>
-  );
+  }, [userId, userEmail, fetchProjects]);
 
   return (
-    <GradientBackground>
+    <View style={GlobalStyles.backgroundContainer}>
       {/* Top navigation bar */}
-      <TopBar title={`Welcome, ${userEmail || "User"}!`} />
+      <TopBar title={`Welcome, ${firstName || "User"}!`} />
 
-      <View style={styles.container}>
-        {/* Projects Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={GlobalStyles.subheaderText}>Featured Projects</Text>
-            {/* Add Project Button */}
-            <TouchableOpacity onPress={() => setFormVisible(true)}>
-              <FontAwesomeIcon icon={faPlus} size={24} style={styles.addIcon} />
-            </TouchableOpacity>
+      {/* Main Scrollable Content */}
+      <FlatList
+        data={[]} // Empty dummy data to enable scrolling
+        keyExtractor={(item, index) => index.toString()}
+        ListHeaderComponent={
+          <View>
+            {/* Featured Projects Section */}
+            <View style={GlobalStyles.transparentContainer}>
+              <View style={styles.sectionHeader}>
+                <Text style={GlobalStyles.subheaderText}>Featured Projects</Text>
+              </View>
+
+              {loading ? (
+                <ActivityIndicator size="medium" color="#ffffff" />
+              ) : error ? (
+                <Text style={GlobalStyles.translucentText}>{error}</Text>
+              ) : projects.length > 0 ? (
+                <FlatList
+                  data={projects}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity onPress={() => navigation.navigate("ProjectDetail", { projectId: item.id, projectName: item.name })}>
+                      <View style={styles.listItem}>
+                        <FontAwesomeIcon style={GlobalStyles.bulletPoint} icon={faBolt} />
+                        <Text style={GlobalStyles.normalText}>{item.name}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  )}
+                  keyExtractor={(item) => item.id}
+                />
+              ) : (
+                <Text style={GlobalStyles.translucentText}>No projects found.</Text>
+              )}
+
+              <TouchableOpacity style={styles.newItemRow} onPress={() => setFormVisible(true)}>
+                <FontAwesomeIcon icon={faPlus} style={styles.plusIcon} />
+                <Text style={styles.newItemText}>New project</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[GlobalStyles.smallButton, GlobalStyles.smallPrimaryButton, styles.customButton]}
+                onPress={() => navigation.navigate("Projects")}
+              >
+                <Text style={GlobalStyles.smallButtonText}>See all projects</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Featured Tasks Section */}
+            <View style={GlobalStyles.transparentContainer}>
+              <View style={styles.sectionHeader}>
+                <Text style={GlobalStyles.subheaderText}>Featured Tasks</Text>
+              </View>
+
+              {loading ? (
+                <ActivityIndicator size="medium" color="#ffffff" />
+              ) : tasks.length > 0 ? (
+                <FlatList
+                  data={tasks}
+                  renderItem={({ item }) => (
+                    <View style={styles.listItem}>
+                      <FontAwesomeIcon style={GlobalStyles.bulletPoint} icon={faBolt} />
+                      <Text style={GlobalStyles.normalText}>{item.title}</Text>
+                    </View>
+                  )}
+                  keyExtractor={(item) => item.id}
+                />
+              ) : (
+                <Text style={GlobalStyles.translucentText}>No tasks found.</Text>
+              )}
+
+              <TouchableOpacity style={styles.newItemRow} onPress={() => setFormVisible(true)}>
+                <FontAwesomeIcon icon={faPlus} style={styles.plusIcon} />
+                <Text style={styles.newItemText}>New task</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[GlobalStyles.smallButton, GlobalStyles.smallPrimaryButton, styles.customButton]}
+                onPress={() => navigation.navigate("TasksScreen")}
+              >
+                <Text style={GlobalStyles.smallButtonText}>See all tasks</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Recent Activities Section */}
+            <View style={GlobalStyles.transparentContainer}>
+              <View style={styles.sectionHeader}>
+                <Text style={GlobalStyles.subheaderText}>Recent Activities</Text>
+              </View>
+
+              {loading ? (
+                <ActivityIndicator size="medium" color="#ffffff" />
+              ) : activities.length > 0 ? (
+                <FlatList
+                  data={activities}
+                  renderItem={({ item }) => (
+                    <View style={styles.listItem}>
+                      <FontAwesomeIcon style={GlobalStyles.bulletPoint} icon={faBolt} />
+                      <Text style={GlobalStyles.normalText}>{item.description}</Text>
+                    </View>
+                  )}
+                  keyExtractor={(item) => item.id}
+                />
+              ) : (
+                <Text style={GlobalStyles.translucentText}>No activities found.</Text>
+              )}
+
+              <TouchableOpacity style={styles.newItemRow} onPress={() => setFormVisible(true)}>
+                <FontAwesomeIcon icon={faPlus} style={styles.plusIcon} />
+                <Text style={styles.newItemText}>New activity</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[GlobalStyles.smallButton, GlobalStyles.smallPrimaryButton, styles.customButton]}
+                onPress={() => navigation.navigate("ActivitiesScreen")}
+              >
+                <Text style={GlobalStyles.smallButtonText}>See all activities</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-
-          {loading ? (
-            <ActivityIndicator size="medium" color="#ffffff" />
-          ) : error ? (
-            <Text style={GlobalStyles.translucentText}>{error}</Text>
-          ) : projects.length > 0 ? (
-            <FlatList
-              data={projects}
-              renderItem={renderProjectItem}
-              keyExtractor={(item) => item.id}
-              style={styles.projectList}
-              contentContainerStyle={styles.flatListContent}
-            />
-          ) : (
-            <Text style={GlobalStyles.translucentText}>No projects found.</Text>
-          )}
-
-          {/* See All Projects Button */}
-          <TouchableOpacity
-            style={[styles.seeAllButton]}
-            onPress={() => navigation.navigate("Projects")}
-          >
-            <Text style={styles.seeAllButtonText}>See All Projects</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Tasks Section */}
-        <View style={styles.section}>
-          <Text style={GlobalStyles.subheaderText}>Your Tasks</Text>
-          {loading ? (
-            <ActivityIndicator size="medium" color="#ffffff" />
-          ) : tasks.length > 0 ? (
-            <FlatList data={tasks} renderItem={renderTaskItem} keyExtractor={(item) => item.id} />
-          ) : (
-            <Text style={GlobalStyles.translucentText}>No tasks found.</Text>
-          )}
-        </View>
-
-        {/* Activities Section */}
-        <View style={styles.section}>
-          <Text style={GlobalStyles.subheaderText}>Recent Activities</Text>
-          {loading ? (
-            <ActivityIndicator size="medium" color="#ffffff" />
-          ) : activities.length > 0 ? (
-            <FlatList
-              data={activities}
-              renderItem={renderActivityItem}
-              keyExtractor={(item) => item.id}
-            />
-          ) : (
-            <Text style={GlobalStyles.translucentText}>No activities found.</Text>
-          )}
-        </View>
-      </View>
+        }
+      />
 
       {/* Bottom navigation bar */}
-      <BottomBar
-        navigation={navigation}
-        activeScreen="Summary"
-        setFormVisible={setFormVisible}
-      />
+      <BottomBar navigation={navigation} activeScreen="Summary" setFormVisible={setFormVisible} />
 
       {/* Create Project Modal */}
-      <CreateProjectModal
-        visible={isFormVisible}
-        onClose={() => setFormVisible(false)}
-        userId={userId}
-      />
-    </GradientBackground>
+      <CreateProjectModal visible={isFormVisible} onClose={() => setFormVisible(false)} userId={userId} />
+    </View>
   );
 };
 
+// ===== Page-Specific Styles ===== //
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 20,
-  },
-  section: {
-    backgroundColor: "rgba(34, 9, 1, 0.5)",
-    padding: 15,
-    borderRadius: 8,
-    marginBottom: 20,
-  },
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    marginBottom: 10,
   },
-  projectItem: {
+  listItem: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 5,
-    borderRadius: 5,
+    paddingVertical: 8,
   },
-  addIcon: {
-    color: "white",
+  newItemRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 10,
   },
-  flatListContent: {
-    paddingTop: 3,
+  newItemText: {
+    color: "rgba(255, 255, 255, 0.6)",
+    marginLeft: 8,
   },
-  seeAllButton: {
-    alignSelf: "flex-start",
-    backgroundColor: "#688e26",
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 5,
-  },
-  seeAllButtonText: {
-    color: "white",
+  plusIcon: {
+    color: "#78290f",
     fontSize: 16,
-    textAlign: "center",
+  },
+  customButton: {
+    width: "40%",
   },
 });
 

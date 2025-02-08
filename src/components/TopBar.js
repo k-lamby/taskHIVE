@@ -20,7 +20,7 @@ const TopBar = ({ title }) => {
 // this page specific styles
 const styles = StyleSheet.create({
     safeArea: {
-        backgroundColor: '#220901',
+        backgroundColor: '#001524',
         width: '100%'
         },
     container: {

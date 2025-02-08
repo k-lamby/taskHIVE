@@ -86,7 +86,7 @@ const BottomBar = ({ navigation, activeScreen, userId }) => {
 const styles = StyleSheet.create({
   // make sure we arent overlapping any graphics at the bottom of the screen
   safeArea: {
-    backgroundColor: '#220901',
+    backgroundColor: '#001524',
     width: '100%',
   },
   // contents to be aligned vertically
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    backgroundColor: '#220901',
+    backgroundColor: '#001524',
     paddingVertical: 10,
   },
   // then create a transparent container for the icon to go in
@@ -113,11 +113,11 @@ const styles = StyleSheet.create({
   // if the active screen corresponds to the container then we want to make sure
   // this is communicated back to the user
   activeIconContainer: {
-    backgroundColor: 'rgba(104, 142, 38, 0.2)',
+    backgroundColor: 'rgba(255, 125, 0, 0.2)',
   },
   activeIcon: {
     fontSize: 40,
-    color: 'rgba(104, 142, 38, 1)',
+    color: 'rgba(255, 125, 0, 1)',
 
   },
 });

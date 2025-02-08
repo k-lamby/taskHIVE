@@ -1,47 +1,42 @@
 //================== LoginModal.js===========================//
-// This is the pop up box to handle logging the user in
+// This is the pop-up box to handle logging the user in
 //===========================================================//
 
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Modal, StyleSheet, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { 
+  View, Text, TextInput, TouchableOpacity, Modal, 
+  StyleSheet, KeyboardAvoidingView, Platform, Alert 
+} from 'react-native';
 import GlobalStyles from '../styles/styles';
 import { logIn } from '../services/authService';
 import { useUser } from '../contexts/UserContext';
 
 const LoginModal = ({ visible, onClose, navigation }) => {
-  // set up various states for grabbing the login details
+  // Set up states for capturing login details
   const usernameInputRef = useRef(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { setUserId } = useUser();
-  const { setUserEmail } = useUser();
+  const { setUserId, setUserEmail, setFirstName } = useUser();
 
   useEffect(() => {
     if (visible) {
-      // When opening the modal, start with cursor in the email box
-      // add a short delay to ensure the component is rendered before
-      //focusing
+      // Auto-focus email input when modal opens
       setTimeout(() => {
         usernameInputRef.current?.focus();
       }, 100);
     }
   }, [visible]);
 
-  // handle the login functionality
+  // Handle login functionality
   const handleLogin = async () => {
     try {
-      // call login from the auth service passing it the inputs
-      // wait for the response
       const userId = await logIn(email, password);
-      // set the user information
       setUserId(userId.uid);
       setUserEmail(userId.email);
-      // close the modal after login
-      onClose(); 
-      // then navigate to the summary page
+      setFirstName(userId.displayName);
+      onClose(); // Close the modal after login
       navigation.navigate('Summary');
     } catch (error) {
-      // if there is error with the login just display an alert for now
       Alert.alert("Login Error", error.message);
     }
   };
@@ -64,34 +59,42 @@ const LoginModal = ({ visible, onClose, navigation }) => {
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           >
             <Text style={GlobalStyles.headerText}>Login</Text>
+            
             <TextInput 
               ref={usernameInputRef}
               style={GlobalStyles.textInput} 
               placeholder="Email" 
-              placeholderTextColor="#ffffff" 
+              placeholderTextColor="rgba(255, 255, 255, 0.7)" 
               value={email}
               onChangeText={setEmail}
               accessibilityLabel="Email input"
               accessibilityHint="Enter your email"
             />
+            
+            {/* Spacing between inputs */}
+            <View style={styles.inputSpacing} />
+
             <TextInput 
               style={GlobalStyles.textInput} 
               placeholder="Password" 
-              placeholderTextColor="#ffffff" 
+              placeholderTextColor="rgba(255, 255, 255, 0.7)" 
               secureTextEntry 
               value={password}
               onChangeText={setPassword}
               accessibilityLabel="Password input"
               accessibilityHint="Enter your password"
             />
+            
             <TouchableOpacity 
-              style={GlobalStyles.primaryButton} 
+              style={GlobalStyles.standardButton} 
               onPress={handleLogin}
               accessibilityLabel="Login button"
               accessibilityHint="Tap to log in"
             >
-              <Text style={GlobalStyles.primaryButtonText}>Login</Text>
+              <Text style={GlobalStyles.standardButtonText}>Login</Text>
             </TouchableOpacity>
+
+            {/* Close Button - Underlined White Text */}
             <TouchableOpacity 
               onPress={onClose}
               accessibilityLabel="Close button"
@@ -99,6 +102,7 @@ const LoginModal = ({ visible, onClose, navigation }) => {
             >
               <Text style={styles.closeButton}>Close</Text>
             </TouchableOpacity>
+
           </KeyboardAvoidingView>
         </View>
       </TouchableOpacity>
@@ -106,18 +110,19 @@ const LoginModal = ({ visible, onClose, navigation }) => {
   );
 };
 
+// ===== Page-Specific Styles ===== //
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'top', // Center the modal container
+    justifyContent: 'top',
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)', 
-    paddingTop: '45%'
+    paddingTop: '45%',
   },
   modalContainer: {
     width: '80%',
     padding: 20,
-    backgroundColor: '#220901',
+    backgroundColor: '#001524',
     borderRadius: 10,
     alignItems: 'center',
   },
@@ -125,10 +130,12 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
   },
+  inputSpacing: {
+    height: 15, // Adds spacing between email and password inputs
+  },
   closeButton: {
     color: '#ffffff',
-    paddingTop: 10,
-    paddingBottom: 10,
+    marginTop: 10,
     fontSize: 16,
   },
 });
