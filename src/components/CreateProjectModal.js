@@ -11,49 +11,44 @@ import {
   Pressable,
   Alert,
 } from "react-native";
-import Icon from "react-native-vector-icons/FontAwesome";
+import Icon from "react-native-vector-icons/Feather";
 
 import AddUserModal from "./AddUserModal";
 import CustomDatePicker from "./CustomDatePicker";
-import { createProject } from "../services/projectService";
-import { useUser } from "../contexts/UserContext";
+import useProjectService from "../services/projectService"; // ✅ Corrected Import
+import { useUser } from "../contexts/UserContext"; // ✅ Ensure correct context import
 
 import GlobalStyles from "../styles/styles";
 
 const { height, width } = Dimensions.get("window");
 
 const CreateProjectForm = ({ visible, onClose }) => {
-  const { userId } = useUser();
+  const { createProject } = useProjectService(); // ✅ Correct Hook Usage
+  const { userId } = useUser(); // ✅ Ensure userId is available
+
   const [projectName, setProjectName] = useState("");
   const [projectDescription, setProjectDescription] = useState("");
   const [dueDate, setDueDate] = useState(new Date());
-  const [addedUsers, setAddedUsers] = useState([]); // List of added user emails
-  const [attachments, setAttachments] = useState([]); // Attachments list (if any)
+  const [addedUsers, setAddedUsers] = useState([]);
   const [showUserModal, setShowUserModal] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   const handleCreateProject = async () => {
-    // Validate required fields
     if (!projectName.trim()) {
       Alert.alert("Error", "Project name is required.");
       return;
     }
 
     try {
-      // Create the project object
       const projectData = {
         name: projectName.trim(),
         description: projectDescription.trim(),
         dueDate: dueDate.toISOString(),
         createdBy: userId,
-        sharedWith: addedUsers, // List of user emails
-        attachments, // Attachments (if any)
+        sharedWith: addedUsers,
       };
 
-      // Call the createProject service
       await createProject(projectData);
-
-      // Reset form fields and close the modal
       resetFormFields();
       onClose();
     } catch (error) {
@@ -67,7 +62,10 @@ const CreateProjectForm = ({ visible, onClose }) => {
     setProjectDescription("");
     setDueDate(new Date());
     setAddedUsers([]);
-    setAttachments([]);
+  };
+
+  const handleRemoveUser = (index) => {
+    setAddedUsers((prevUsers) => prevUsers.filter((_, i) => i !== index));
   };
 
   return (
@@ -78,38 +76,39 @@ const CreateProjectForm = ({ visible, onClose }) => {
             <Text style={[GlobalStyles.headerText, styles.modalHeader]}>
               Create New Project
             </Text>
+
+            {/* Project Name */}
             <TextInput
-              style={[
-                GlobalStyles.inputContainer,
-                GlobalStyles.normalText,
-                styles.inputText,
-              ]}
+              style={[GlobalStyles.inputContainer, GlobalStyles.normalTextBlack]}
               placeholder="Project Name"
-              placeholderTextColor="white"
+              placeholderTextColor="black"
               value={projectName}
               onChangeText={setProjectName}
             />
+
+            {/* Project Description (Double Height) */}
             <TextInput
               style={[
                 GlobalStyles.inputContainer,
-                GlobalStyles.normalText,
-                styles.inputText,
-                styles.desc,
+                GlobalStyles.normalTextBlack,
+                styles.descriptionInput, // ✅ Increased height
               ]}
               placeholder="Project Description"
-              placeholderTextColor="white"
+              placeholderTextColor="black"
               multiline={true}
-              numberOfLines={3}
+              numberOfLines={6} // ✅ Increased number of lines
               value={projectDescription}
               onChangeText={setProjectDescription}
             />
+
+            {/* Due Date (Indented by 3 Points) */}
             <View style={styles.dueDateContainer}>
-              <Text style={styles.dueDateLabel}>Due Date:</Text>
+              <Text style={[GlobalStyles.normalText, styles.dueDateLabel]}>Due Date</Text>
               <Pressable
                 style={[GlobalStyles.inputContainer, styles.dateContainer]}
                 onPress={() => setShowDatePicker(true)}
               >
-                <Text style={styles.dateText}>
+                <Text style={GlobalStyles.normalTextBlack}>
                   {`${dueDate.getDate()}/${
                     dueDate.getMonth() + 1
                   }/${dueDate.getFullYear()}`}
@@ -117,43 +116,43 @@ const CreateProjectForm = ({ visible, onClose }) => {
               </Pressable>
             </View>
 
+            {/* Added Users Section (Icons Now Vertically Aligned) */}
             <View style={styles.addedUsersContainer}>
-              <Text style={styles.addedUsersHeader}>Added Users:</Text>
-              {addedUsers.map((user, index) => (
-                <Text key={index} style={styles.addedUser}>
-                  {user}
+              <Text style={GlobalStyles.subheaderText}>Added Users:</Text>
+              <Pressable onPress={() => setShowUserModal(true)} style={styles.addUserIconContainer}>
+                <Icon name="user-plus" size={20} color="#fff" />
+              </Pressable>
+            </View>
+
+            {/* Added Users List (Icons Now Vertically Aligned) */}
+            <View style={styles.userList}>
+              {addedUsers.length > 0 ? (
+                addedUsers.map((user, index) => (
+                  <View key={index} style={styles.userRow}>
+                    <Text style={GlobalStyles.normalText}>{user}</Text>
+                    <Pressable onPress={() => handleRemoveUser(index)}>
+                      <Icon name="x" size={20} color="#FFA500" />
+                    </Pressable>
+                  </View>
+                ))
+              ) : (
+                <Text style={GlobalStyles.translucentText}>
+                  No users added yet.
                 </Text>
-              ))}
+              )}
             </View>
 
-            <View style={styles.buttonContainer}>
-              <Pressable
-                style={GlobalStyles.smallSecondaryButton}
-                onPress={handleCreateProject}
-              >
-                <Text style={GlobalStyles.smallButtonText}>Create</Text>
-              </Pressable>
-              <Pressable
-                style={GlobalStyles.smallPrimaryButton}
-                onPress={() => {
-                  resetFormFields();
-                  onClose();
-                }}
-              >
-                <Text style={GlobalStyles.smallButtonText}>Cancel</Text>
-              </Pressable>
-            </View>
+            {/* Buttons (Create & Close) */}
+            <Pressable
+              style={[GlobalStyles.primaryButton, styles.createButton]}
+              onPress={handleCreateProject}
+            >
+              <Text style={GlobalStyles.primaryButtonText}>Create</Text>
+            </Pressable>
 
-            {/* Icon for adding users */}
-            <View style={styles.iconContainer}>
-              <Pressable onPress={() => setShowUserModal(true)}>
-                <Icon
-                  name="user-plus"
-                  style={styles.icons}
-                  color="rgba(255, 255, 255, 0.7)"
-                />
-              </Pressable>
-            </View>
+            <Pressable onPress={onClose}>
+              <Text style={styles.closeButton}>Close</Text>
+            </Pressable>
           </View>
         </View>
       </TouchableWithoutFeedback>
@@ -162,9 +161,7 @@ const CreateProjectForm = ({ visible, onClose }) => {
       <AddUserModal
         visible={showUserModal}
         onClose={() => setShowUserModal(false)}
-        onUserAdded={(newUser) =>
-          setAddedUsers((prevUsers = []) => [...prevUsers, newUser])
-        }
+        onUserAdded={(newUser) => setAddedUsers((prevUsers) => [...prevUsers, newUser])}
       />
 
       {/* Date Picker */}
@@ -178,6 +175,7 @@ const CreateProjectForm = ({ visible, onClose }) => {
   );
 };
 
+// ===== Updated Styles ===== //
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
@@ -187,7 +185,7 @@ const styles = StyleSheet.create({
   modalContainer: {
     height: height * 0.8,
     width: width * 0.9,
-    backgroundColor: "#e87722",
+    backgroundColor: "#15616D",
     borderTopLeftRadius: 100,
     borderTopRightRadius: 100,
     padding: 20,
@@ -201,57 +199,48 @@ const styles = StyleSheet.create({
     marginTop: 20,
     textAlign: "center",
   },
+  descriptionInput: {
+    height: 120, // ✅ Double height
+    textAlignVertical: "top",
+  },
   dueDateContainer: {
-    flexDirection: "row",
-    alignItems: "center",
     width: "100%",
-    marginTop: 0,
+    marginTop: 10,
   },
   dueDateLabel: {
-    color: "white",
-    marginRight: 10,
+    paddingLeft: 3, // Indented by 3 points
   },
   dateContainer: {
-    flex: 1,
-  },
-  dateText: {
-    color: "black",
-    textAlign: "center",
+    justifyContent: "center",
   },
   addedUsersContainer: {
-    marginTop: 10,
-    width: "100%",
-  },
-  addedUsersHeader: {
-    color: "white",
-    marginBottom: 5,
-    fontWeight: "bold",
-  },
-  addedUser: {
-    color: "white",
-    marginBottom: 5,
-  },
-  inputText: {
-    color: "black",
-  },
-  buttonContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center", // ✅ Ensures vertical alignment
     width: "100%",
+    marginTop: 10,
+  },
+  addUserIconContainer: {
+    alignItems: "center", // ✅ Ensures icon is vertically aligned
+  },
+  userList: {
+    width: "100%",
+    marginTop: 5,
+  },
+  userRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center", // ✅ Ensures text and "X" icon align
+    marginBottom: 5,
+  },
+  createButton: {
     marginTop: 20,
   },
-  iconContainer: {
-    position: "absolute",
-    bottom: 40,
-    left: 20,
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  icons: {
-    fontSize: 30,
-    paddingRight: 10,
-    paddingLeft: 5,
-    color: "rgba(255, 255, 255, 0.7)",
+  closeButton: {
+    marginTop: 10,
+    color: "#FFFFFF",
+    textDecorationLine: "underline",
+    textAlign: "center",
   },
 });
 

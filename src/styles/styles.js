@@ -1,12 +1,6 @@
 import { StyleSheet } from 'react-native';
 
 const GlobalStyles = StyleSheet.create({
-  // ===== MAIN BACKGROUND CONTAINER ===== //
-  backgroundContainer: {
-    flex: 1,
-    backgroundColor: "#15616d", // Main background color for all screens
-  },
-
   // ===== GENERAL PAGE STYLES ===== //
   fullPageContainer: {
     flex: 1,
@@ -15,7 +9,11 @@ const GlobalStyles = StyleSheet.create({
     paddingTop: 60,
     paddingHorizontal: 40,
   },
-
+  container: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
   // ===== LOGO STYLES ===== //
   logo: {
     width: 130,
@@ -55,7 +53,7 @@ const GlobalStyles = StyleSheet.create({
     fontFamily: 'Akzidenz-grotesk-light',
   },
   bulletPoint: {
-    color: "#32CD32", // Bright lime green
+    color: "#32CD32", 
     fontSize: 20,
     marginRight: 8,
   },
@@ -65,7 +63,7 @@ const GlobalStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  standardButton: {
+  primaryButton: {
     paddingVertical: 12,
     paddingHorizontal: 20,
     backgroundColor: '#78290f',
@@ -74,7 +72,7 @@ const GlobalStyles = StyleSheet.create({
     justifyContent: 'center',
     marginVertical: 10,
   },
-  standardButtonText: {
+  primaryButtonText: {
     color: '#ffffff',
     fontSize: 18,
     fontFamily: 'Akzidenz-grotesk-light',
@@ -144,15 +142,38 @@ const GlobalStyles = StyleSheet.create({
     flex: 1,
   },
 
-  // ===== TRANSPARENT CONTAINER (REUSABLE) ===== //
-transparentContainer: {
-  backgroundColor: "rgba(34, 9, 1, 0.5)", 
-  padding: 15,
-  borderRadius: 8,
-  marginTop: 20,
-  marginLeft: 20,
-  marginRight: 20
-},
+  // ===== DARK BLUE CONTAINER (REUSABLE) ===== //
+  // Dark blue background container
+  sectionContainer: {
+    backgroundColor: "#001524",
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#FFFFFF",
+  },
+  listItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 8,
+  },
+  seeMore: {
+    marginTop: 10,
+    alignSelf: "flex-end",
+  },
+  seeMoreText: {
+    color: "#FFA500",
+    fontWeight: "bold",
+  },
 });
 
 export default GlobalStyles;

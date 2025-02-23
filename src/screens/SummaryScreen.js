@@ -6,12 +6,14 @@ import {
   FlatList,
   ActivityIndicator,
   StyleSheet,
+  Modal,
 } from "react-native";
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
-import { faBolt, faPlus } from "@fortawesome/free-solid-svg-icons";
+import { faBolt } from "@fortawesome/free-solid-svg-icons";
 
 import TopBar from "../components/TopBar";
 import BottomBar from "../components/BottomBar";
+import GradientBackground from "../components/GradientBackground";
 import CreateProjectModal from "../components/CreateProjectModal";
 import useProjectService from "../services/projectService";
 import { fetchTasksWithSubtasksByOwner } from "../services/taskService";
@@ -26,6 +28,9 @@ const SummaryScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isFormVisible, setFormVisible] = useState(false);
+
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [selectedActivity, setSelectedActivity] = useState(null);
 
   const { userId, userEmail, firstName } = useUser();
   const { fetchProjects } = useProjectService();
@@ -60,169 +65,177 @@ const SummaryScreen = ({ navigation }) => {
     fetchData();
   }, [userId, userEmail, fetchProjects]);
 
+  const renderSection = (title, data, noDataText, navigateTo, type) => (
+    <View style={GlobalStyles.sectionContainer}>
+      {/* Section Header */}
+      <View style={GlobalStyles.sectionHeader}>
+        <Text style={GlobalStyles.sectionTitle}>{title}</Text>
+      </View>
+
+      {loading ? (
+        <ActivityIndicator size="medium" color="#ffffff" />
+      ) : data.length > 0 ? (
+        <FlatList
+          data={data}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={GlobalStyles.listItem}
+              onPress={() => {
+                if (type === "project") {
+                  navigation.navigate("ProjectDetail", {
+                    projectId: item.id,
+                    projectName: item.name,
+                  });
+                } else if (type === "task") {
+                  setSelectedTask(item);
+                } else if (type === "activity") {
+                  setSelectedActivity(item);
+                }
+              }}
+            >
+              <FontAwesomeIcon style={GlobalStyles.bulletPoint} icon={faBolt} />
+              <Text style={GlobalStyles.normalText}>
+                {item.name || item.title || item.description}
+              </Text>
+            </TouchableOpacity>
+          )}
+          keyExtractor={(item, index) => index.toString()}
+        />
+      ) : (
+        <Text style={GlobalStyles.translucentText}>{noDataText}</Text>
+      )}
+
+      {/* See More Button */}
+      <TouchableOpacity
+        style={GlobalStyles.seeMore}
+        onPress={() => navigation.navigate(navigateTo)}
+      >
+        <Text style={GlobalStyles.seeMoreText}>See More →</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   return (
-    <View style={GlobalStyles.backgroundContainer}>
+    <GradientBackground>
       {/* Top navigation bar */}
       <TopBar title={`Welcome, ${firstName || "User"}!`} />
 
-      {/* Main Scrollable Content */}
-      <FlatList
-        data={[]} // Empty dummy data to enable scrolling
-        keyExtractor={(item, index) => index.toString()}
-        ListHeaderComponent={
-          <View>
-            {/* Featured Projects Section */}
-            <View style={GlobalStyles.transparentContainer}>
-              <View style={styles.sectionHeader}>
-                <Text style={GlobalStyles.subheaderText}>Featured Projects</Text>
-              </View>
+      <View style={GlobalStyles.container}>
+        {/* Featured Projects Section */}
+        {renderSection(
+          "Featured Projects",
+          projects,
+          "No projects found.",
+          "Projects",
+          "project"
+        )}
 
-              {loading ? (
-                <ActivityIndicator size="medium" color="#ffffff" />
-              ) : error ? (
-                <Text style={GlobalStyles.translucentText}>{error}</Text>
-              ) : projects.length > 0 ? (
-                <FlatList
-                  data={projects}
-                  renderItem={({ item }) => (
-                    <TouchableOpacity onPress={() => navigation.navigate("ProjectDetail", { projectId: item.id, projectName: item.name })}>
-                      <View style={styles.listItem}>
-                        <FontAwesomeIcon style={GlobalStyles.bulletPoint} icon={faBolt} />
-                        <Text style={GlobalStyles.normalText}>{item.name}</Text>
-                      </View>
-                    </TouchableOpacity>
-                  )}
-                  keyExtractor={(item) => item.id}
-                />
-              ) : (
-                <Text style={GlobalStyles.translucentText}>No projects found.</Text>
-              )}
+        {/* Featured Tasks Section */}
+        {renderSection(
+          "Featured Tasks",
+          tasks,
+          "No tasks found.",
+          "TasksScreen",
+          "task"
+        )}
 
-              <TouchableOpacity style={styles.newItemRow} onPress={() => setFormVisible(true)}>
-                <FontAwesomeIcon icon={faPlus} style={styles.plusIcon} />
-                <Text style={styles.newItemText}>New project</Text>
-              </TouchableOpacity>
+        {/* Recent Activities Section */}
+        {renderSection(
+          "Recent Activities",
+          activities,
+          "No activities found.",
+          "ActivitiesScreen",
+          "activity"
+        )}
+      </View>
 
-              <TouchableOpacity
-                style={[GlobalStyles.smallButton, GlobalStyles.smallPrimaryButton, styles.customButton]}
-                onPress={() => navigation.navigate("Projects")}
-              >
-                <Text style={GlobalStyles.smallButtonText}>See all projects</Text>
-              </TouchableOpacity>
-            </View>
+      {/* Bottom navigation bar */}
+      <BottomBar
+        navigation={navigation}
+        activeScreen="Summary"
+        setFormVisible={setFormVisible}
+      />
 
-            {/* Featured Tasks Section */}
-            <View style={GlobalStyles.transparentContainer}>
-              <View style={styles.sectionHeader}>
-                <Text style={GlobalStyles.subheaderText}>Featured Tasks</Text>
-              </View>
+      {/* Create Project Modal */}
+      <CreateProjectModal
+        visible={isFormVisible}
+        onClose={() => setFormVisible(false)}
+        userId={userId}
+      />
 
-              {loading ? (
-                <ActivityIndicator size="medium" color="#ffffff" />
-              ) : tasks.length > 0 ? (
-                <FlatList
-                  data={tasks}
-                  renderItem={({ item }) => (
-                    <View style={styles.listItem}>
-                      <FontAwesomeIcon style={GlobalStyles.bulletPoint} icon={faBolt} />
-                      <Text style={GlobalStyles.normalText}>{item.title}</Text>
-                    </View>
-                  )}
-                  keyExtractor={(item) => item.id}
-                />
-              ) : (
-                <Text style={GlobalStyles.translucentText}>No tasks found.</Text>
-              )}
-
-              <TouchableOpacity style={styles.newItemRow} onPress={() => setFormVisible(true)}>
-                <FontAwesomeIcon icon={faPlus} style={styles.plusIcon} />
-                <Text style={styles.newItemText}>New task</Text>
-              </TouchableOpacity>
+      {/* Task Detail Modal */}
+      {selectedTask && (
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={!!selectedTask}
+          onRequestClose={() => setSelectedTask(null)}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>{selectedTask.title}</Text>
+              <Text style={styles.modalText}>{selectedTask.description}</Text>
 
               <TouchableOpacity
-                style={[GlobalStyles.smallButton, GlobalStyles.smallPrimaryButton, styles.customButton]}
-                onPress={() => navigation.navigate("TasksScreen")}
+                style={GlobalStyles.standardButton}
+                onPress={() => setSelectedTask(null)}
               >
-                <Text style={GlobalStyles.smallButtonText}>See all tasks</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Recent Activities Section */}
-            <View style={GlobalStyles.transparentContainer}>
-              <View style={styles.sectionHeader}>
-                <Text style={GlobalStyles.subheaderText}>Recent Activities</Text>
-              </View>
-
-              {loading ? (
-                <ActivityIndicator size="medium" color="#ffffff" />
-              ) : activities.length > 0 ? (
-                <FlatList
-                  data={activities}
-                  renderItem={({ item }) => (
-                    <View style={styles.listItem}>
-                      <FontAwesomeIcon style={GlobalStyles.bulletPoint} icon={faBolt} />
-                      <Text style={GlobalStyles.normalText}>{item.description}</Text>
-                    </View>
-                  )}
-                  keyExtractor={(item) => item.id}
-                />
-              ) : (
-                <Text style={GlobalStyles.translucentText}>No activities found.</Text>
-              )}
-
-              <TouchableOpacity style={styles.newItemRow} onPress={() => setFormVisible(true)}>
-                <FontAwesomeIcon icon={faPlus} style={styles.plusIcon} />
-                <Text style={styles.newItemText}>New activity</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[GlobalStyles.smallButton, GlobalStyles.smallPrimaryButton, styles.customButton]}
-                onPress={() => navigation.navigate("ActivitiesScreen")}
-              >
-                <Text style={GlobalStyles.smallButtonText}>See all activities</Text>
+                <Text style={GlobalStyles.standardButtonText}>Close</Text>
               </TouchableOpacity>
             </View>
           </View>
-        }
-      />
+        </Modal>
+      )}
 
-      {/* Bottom navigation bar */}
-      <BottomBar navigation={navigation} activeScreen="Summary" setFormVisible={setFormVisible} />
+      {/* Activity Detail Modal */}
+      {selectedActivity && (
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={!!selectedActivity}
+          onRequestClose={() => setSelectedActivity(null)}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>{selectedActivity.description}</Text>
 
-      {/* Create Project Modal */}
-      <CreateProjectModal visible={isFormVisible} onClose={() => setFormVisible(false)} userId={userId} />
-    </View>
+              <TouchableOpacity
+                style={GlobalStyles.standardButton}
+                onPress={() => setSelectedActivity(null)}
+              >
+                <Text style={GlobalStyles.standardButtonText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      )}
+    </GradientBackground>
   );
 };
 
 // ===== Page-Specific Styles ===== //
 const styles = StyleSheet.create({
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
     alignItems: "center",
-    marginBottom: 10,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
-  listItem: {
-    flexDirection: "row",
+  modalContent: {
+    backgroundColor: "#001524",
+    padding: 20,
+    borderRadius: 10,
+    width: "80%",
     alignItems: "center",
-    paddingVertical: 8,
   },
-  newItemRow: {
-    flexDirection: "row",
-    alignItems: "center",
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#FFFFFF",
+  },
+  modalText: {
+    color: "#FFFFFF",
     marginTop: 10,
-  },
-  newItemText: {
-    color: "rgba(255, 255, 255, 0.6)",
-    marginLeft: 8,
-  },
-  plusIcon: {
-    color: "#78290f",
-    fontSize: 16,
-  },
-  customButton: {
-    width: "40%",
   },
 });
 

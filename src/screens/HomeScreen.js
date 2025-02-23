@@ -1,13 +1,8 @@
-//================== HomeScreen.js===============================//
-// This is the first page displayed to the user; it has the logo,
-// application tagline, and buttons to either log in or sign up.
-//===============================================================//
-
 import React, { useState } from "react";
 import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
 import GlobalStyles from "../styles/styles";
-import LoginModal from "../components/LoginModal"; 
-import GradientBackground from "../components/GradientBackground"; 
+import LoginModal from "../components/LoginModal";
+import GradientBackground from "../components/GradientBackground";
 
 const HomeScreen = ({ navigation }) => {
   // Control whether the login modal is visible or not
@@ -23,18 +18,16 @@ const HomeScreen = ({ navigation }) => {
         />
         <Text style={GlobalStyles.logoText}>task</Text>
         <Text style={GlobalStyles.logoText}>HIVE</Text>
-        <Text style={GlobalStyles.subheaderText}>
-          Transform Chaos Into Clarity
-        </Text>
+        <Text style={GlobalStyles.subheaderText}>Transform Chaos Into Clarity</Text>
 
-        {/* Page-Specific Button Container */}
+        {/* Button Section */}
         <View style={styles.buttonContainer}>
           {/* Log In Button (Modal) */}
           <TouchableOpacity
-            style={[GlobalStyles.standardButton, styles.equalWidthButton]}
+            style={[GlobalStyles.primaryButton, styles.equalWidthButton]}
             onPress={() => setModalVisible(true)}
           >
-            <Text style={GlobalStyles.standardButtonText}>Log In</Text>
+            <Text style={GlobalStyles.primaryButtonText}>Log In</Text>
           </TouchableOpacity>
 
           {/* Sign Up Button (Navigates to Signup Page) */}
@@ -47,7 +40,7 @@ const HomeScreen = ({ navigation }) => {
         </View>
       </View>
 
-      {/* Login Modal (Visibility controlled by state) */}
+      {/* Login Modal */}
       <LoginModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}

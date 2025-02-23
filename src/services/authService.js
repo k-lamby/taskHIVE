@@ -3,21 +3,40 @@
 // the application from Firebase
 //===============================================================//
 
-import { auth } from '../config/firebaseConfig';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { auth, db } from '../config/firebaseConfig';
+import { 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  updateProfile
+} from 'firebase/auth';
+import { collection, query, where, getDocs, updateDoc, doc, setDoc, getDoc } from "firebase/firestore";
 
 // Creates a new user account, uses Firebase Authentication
-// Stores first and last name in the Firebase Authentication profile
+// Stores first and last name in both Firebase Authentication (displayName)
+// and Firestore (users collection)
 // https://firebase.google.com/docs/auth/web/password-auth
 const signUp = async (email, password, firstName, lastName) => {
   try {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const normalizedEmail = email.trim().toLowerCase();
+    const userCredential = await createUserWithEmailAndPassword(auth, normalizedEmail, password);
     const user = userCredential.user;
 
-    // Update user profile with first and last name
+    // ✅ Update Firebase Auth profile
     await updateProfile(user, {
-      displayName: `${firstName} ${lastName}` // Store full name
+      displayName: `${firstName} ${lastName}` // Store full name in Firebase Auth
     });
+
+    // ✅ Store user details in Firestore (NEW)
+    await setDoc(doc(db, "users", user.uid), {
+      firstName: firstName,
+      lastName: lastName,
+      email: normalizedEmail,
+      createdAt: new Date(),
+    });
+
+    // we then need to identify if this new user is assigned with
+    // any of the existing projects.
+    await updateSharedProjects(email, user.uid);
 
     return user;
   } catch (error) {
@@ -27,7 +46,41 @@ const signUp = async (email, password, firstName, lastName) => {
   }
 };
 
-// Uses the Firebase Authentication for logging the user in
+// handler function for identifying if the newly signed up user
+// is already associated with any projects
+const updateSharedProjects = async (email, userId) => {
+  try {
+    const projects = collection(db, "projects");
+    
+    // run a query where sharedWith array contains the new user email
+    const q = query(projects, where("sharedWith", "array-contains", email.trim().toLowerCase()));
+    // run the query and await the results
+    const matchingProjects = await getDocs(q);
+
+    // we then want to iterate over the matching projects
+    // and swap out the email for the new user id
+    const updatePromises = matchingProjects.docs.map(async (docSnapshot) => {
+      // get the data associated with the project
+      const projectData = docSnapshot.data();
+      // if the entry matches the email, then we update it with the userId
+      const updatedSharedWith = projectData.sharedWith.map(entry => 
+        entry === email ? userId : entry 
+      );
+
+      // we then update the document with the modified sharedWith array
+      return updateDoc(doc(db, "projects", docSnapshot.id), {
+        sharedWith: updatedSharedWith
+      });
+    });
+
+    // we then wait for all the updates to happen
+    await Promise.all(updatePromises);
+  } catch (error) {
+    console.error("Error updating shared projects:", error);
+  }
+};
+
+// Uses Firebase Authentication for logging the user in
 const logIn = async (email, password) => {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -41,5 +94,29 @@ const logIn = async (email, password) => {
   }
 };
 
+// Fetches user first names from Firestore based on user IDs
+const fetchUserNamesByIds = async (userIds) => {
+  try {
+    if (!userIds || userIds.length === 0) return {};
+
+    let names = {};
+
+    // Fetch names from Firestore for each user ID
+    for (const userId of userIds) {
+      const userDoc = await getDoc(doc(db, "users", userId)); // ✅ Query Firestore
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        names[userId] = userData.firstName || "Unknown"; // ✅ Store first name
+      } else {
+        names[userId] = "Unknown"; // Fallback if user is missing
+      }
+    }
+    return names;
+  } catch (error) {
+    console.error("❌ Error fetching user names:", error);
+    return {};
+  }
+};
+
 // Export only the functions that need to be used outside of this
-export { signUp, logIn };
+export { signUp, logIn, fetchUserNamesByIds };

@@ -1,7 +1,3 @@
-//================== LoginModal.js===========================//
-// This is the pop-up box to handle logging the user in
-//===========================================================//
-
 import React, { useEffect, useRef, useState } from 'react';
 import { 
   View, Text, TextInput, TouchableOpacity, Modal, 
@@ -30,10 +26,14 @@ const LoginModal = ({ visible, onClose, navigation }) => {
   // Handle login functionality
   const handleLogin = async () => {
     try {
-      const userId = await logIn(email, password);
-      setUserId(userId.uid);
-      setUserEmail(userId.email);
-      setFirstName(userId.displayName);
+      const user = await logIn(email, password);
+      setUserId(user.uid);
+      setUserEmail(user.email);
+
+      // ✅ Extract only the first name from "Katherine Lambert"
+      const firstName = user.displayName.split(" ")[0];
+      setFirstName(firstName);
+
       onClose(); // Close the modal after login
       navigation.navigate('Summary');
     } catch (error) {
@@ -86,12 +86,12 @@ const LoginModal = ({ visible, onClose, navigation }) => {
             />
             
             <TouchableOpacity 
-              style={GlobalStyles.standardButton} 
+              style={GlobalStyles.primaryButton} 
               onPress={handleLogin}
               accessibilityLabel="Login button"
               accessibilityHint="Tap to log in"
             >
-              <Text style={GlobalStyles.standardButtonText}>Login</Text>
+              <Text style={GlobalStyles.primaryButtonText}>Login</Text>
             </TouchableOpacity>
 
             {/* Close Button - Underlined White Text */}

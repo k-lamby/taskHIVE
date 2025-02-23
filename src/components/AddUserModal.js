@@ -6,8 +6,8 @@ import {
   StyleSheet,
   Modal,
   TouchableWithoutFeedback,
-  TouchableOpacity,
   Keyboard,
+  Pressable,
   Alert,
 } from 'react-native';
 import GlobalStyles from '../styles/styles';
@@ -16,19 +16,14 @@ const AddUserModal = ({ visible, onClose, onUserAdded }) => {
   const [userEmail, setUserEmail] = useState('');
 
   const handleAddUser = () => {
-    // Validate email input
     if (!userEmail.trim()) {
       Alert.alert('Invalid Input', 'Please enter a valid email address.');
-      return; // Prevent adding an empty or invalid email
+      return;
     }
 
-    // Log the email for debugging
     console.log('Adding user:', userEmail);
 
-    // Pass the email to the parent callback
     onUserAdded(userEmail.trim());
-
-    // Reset the input field and close the modal
     setUserEmail('');
     onClose();
   };
@@ -38,7 +33,8 @@ const AddUserModal = ({ visible, onClose, onUserAdded }) => {
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.overlay}>
           <View style={styles.modalContainer}>
-            <Text style={GlobalStyles.headerText}>Add User</Text>
+            <Text style={[GlobalStyles.headerText, styles.headerSpace]}>Add User</Text>
+            
             <TextInput
               style={GlobalStyles.inputContainer}
               placeholder="Enter User Email"
@@ -48,13 +44,15 @@ const AddUserModal = ({ visible, onClose, onUserAdded }) => {
               keyboardType="email-address"
               textContentType="emailAddress"
             />
+
+            {/* Button Container (Stacked Vertically) */}
             <View style={styles.buttonContainer}>
-              <TouchableOpacity onPress={handleAddUser} style={GlobalStyles.smallPrimaryButton}>
-                <Text style={GlobalStyles.smallButtonText}>Add User</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={onClose} style={GlobalStyles.smallSecondaryButton}>
-                <Text style={GlobalStyles.smallButtonText}>Close</Text>
-              </TouchableOpacity>
+              <Pressable style={GlobalStyles.primaryButton} onPress={handleAddUser}>
+                <Text style={GlobalStyles.primaryButtonText}>Add User</Text>
+              </Pressable>
+              <Pressable onPress={onClose}>
+                <Text style={styles.closeButton}>Close</Text>
+              </Pressable>
             </View>
           </View>
         </View>
@@ -63,24 +61,36 @@ const AddUserModal = ({ visible, onClose, onUserAdded }) => {
   );
 };
 
+// ===== Updated Styles ===== //
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContainer: {
-    margin: 20,
+    width: '80%',
+    backgroundColor: '#001524',
+    borderRadius: 20,
     padding: 20,
-    backgroundColor: '#220901',
-    borderRadius: 10,
     alignItems: 'center',
   },
+  headerSpace: {
+    marginBottom: 20,
+  },
   buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: 'column', // ✅ Stacks buttons vertically
+    alignItems: 'center',
     width: '100%',
-    marginTop: 20,
+    marginTop: 10,
+    gap: 10, // Adds spacing between the buttons
+  },
+  closeButton: {
+    marginTop: 10,
+    color: "#FFFFFF",
+    textDecorationLine: "underline",
+    textAlign: "center",
   },
 });
 

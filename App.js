@@ -27,6 +27,8 @@ export default function App() {
   
   return (
     <NavigationContainer>
+
+        
       <UserProvider>
         <StatusBar barStyle="light-content" />
         <Stack.Navigator initialRouteName="Home">

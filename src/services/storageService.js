@@ -1,69 +1,91 @@
-import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
+import { launchImageLibraryAsync, requestMediaLibraryPermissionsAsync, MediaType } from "expo-image-picker";
+import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
 
 /**
- * Uploads a file to Firebase Storage.
- * @param {string} uri - The local file URI (e.g., from Expo Image Picker).
- * @param {string} storagePath - The path in Firebase Storage to save the file (e.g., `projects/{userId}/{fileName}`).
+ * Converts a local file URI (Expo) to a Blob for Firebase Storage.
+ * @param {string} uri - The local file URI (must have `file://` prefix).
+ * @returns {Promise<Blob>} - A Blob object for upload.
+ */
+const uriToBlob = async (uri) => {
+  try {
+    const response = await fetch(uri);
+    if (!response.ok) throw new Error(`Failed to fetch file: ${response.statusText}`);
+    return await response.blob();
+  } catch (error) {
+    console.error("❌ Error converting URI to Blob:", error);
+    throw error;
+  }
+};
+
+/**
+ * Opens the image picker and returns the selected file.
+ * @param {string} mediaType - "image" or "document"
+ * @returns {Promise<{uri: string, fileName: string} | null>}
+ */
+export const selectFile = async (mediaType) => {
+  try {
+    // ✅ Request media library permissions
+    const { status } = await requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      throw new Error("Permission to access media library is required!");
+    }
+
+    // ✅ Open image picker
+    const result = await launchImageLibraryAsync({
+      mediaTypes: mediaType === "image" ? [MediaType.IMAGE] : [MediaType.ALL],
+      allowsEditing: true,
+      quality: 1,
+    });
+
+    if (result.canceled) return null;
+
+    const file = result.assets[0]; // ✅ Get selected file
+    return { uri: file.uri, fileName: file.fileName };
+  } catch (error) {
+    console.error("❌ Error selecting file:", error);
+    throw error;
+  }
+};
+/**
+ * Uploads a file to Firebase Storage with resumable uploads.
+ * @param {string} uri - The local file URI.
+ * @param {string} storagePath - The path in Firebase Storage.
+ * @param {function} [onProgress] - Optional callback for tracking upload progress.
  * @returns {Promise<string>} - Returns the download URL of the uploaded file.
  */
-export const uploadFile = async (uri, storagePath) => {
+export const uploadFile = async (uri, storagePath, onProgress) => {
   try {
-    // Fetch the file from the local URI and convert it to a Blob
-    const response = await fetch(uri);
-    const blob = await response.blob();
+    if (!uri.startsWith("file://")) {
+      throw new Error("Invalid file URI. Ensure it has a `file://` prefix.");
+    }
 
-    // Initialize Firebase Storage and create a reference
+    const blob = await uriToBlob(uri);
     const storage = getStorage();
     const storageRef = ref(storage, storagePath);
 
-    // Upload the file Blob to Firebase Storage
-    await uploadBytes(storageRef, blob);
+    const uploadTask = uploadBytesResumable(storageRef, blob);
 
-    // Get and return the download URL of the uploaded file
-    const downloadURL = await getDownloadURL(storageRef);
-    return downloadURL;
+    return new Promise((resolve, reject) => {
+      uploadTask.on(
+        "state_changed",
+        (snapshot) => {
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          console.log(`📤 Upload is ${progress.toFixed(2)}% done`);
+          if (onProgress) onProgress(progress);
+        },
+        (error) => {
+          console.error("❌ Error uploading file:", error);
+          reject(error);
+        },
+        async () => {
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+          console.log(`✅ Upload successful! File available at: ${downloadURL}`);
+          resolve(downloadURL);
+        }
+      );
+    });
   } catch (error) {
-    console.error("Error uploading file to Firebase Storage:", error);
-    throw error; // Rethrow the error for the caller to handle
-  }
-};
-
-/**
- * Deletes a file from Firebase Storage.
- * @param {string} storagePath - The path in Firebase Storage of the file to delete (e.g., `projects/{userId}/{fileName}`).
- * @returns {Promise<void>} - Resolves when the file is deleted successfully.
- */
-export const deleteFile = async (storagePath) => {
-  try {
-    // Initialize Firebase Storage and create a reference
-    const storage = getStorage();
-    const storageRef = ref(storage, storagePath);
-
-    // Delete the file from Firebase Storage
-    await deleteObject(storageRef);
-    console.log(`File at path "${storagePath}" successfully deleted.`);
-  } catch (error) {
-    console.error("Error deleting file from Firebase Storage:", error);
-    throw error; // Rethrow the error for the caller to handle
-  }
-};
-
-/**
- * Retrieves a download URL for a file in Firebase Storage.
- * @param {string} storagePath - The path in Firebase Storage of the file (e.g., `projects/{userId}/{fileName}`).
- * @returns {Promise<string>} - Returns the download URL of the file.
- */
-export const getFileDownloadURL = async (storagePath) => {
-  try {
-    // Initialize Firebase Storage and create a reference
-    const storage = getStorage();
-    const storageRef = ref(storage, storagePath);
-
-    // Get and return the download URL of the file
-    const downloadURL = await getDownloadURL(storageRef);
-    return downloadURL;
-  } catch (error) {
-    console.error("Error retrieving file download URL from Firebase Storage:", error);
-    throw error; // Rethrow the error for the caller to handle
+    console.error("❌ Error uploading file to Firebase Storage:", error);
+    throw error;
   }
 };
