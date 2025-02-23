@@ -1,6 +1,6 @@
 import { launchImageLibraryAsync, requestMediaLibraryPermissionsAsync, MediaType } from "expo-image-picker";
 import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
-
+//https://stackoverflow.com/questions/56830482/should-i-upload-images-to-cloud-firestore-or-firebase-storage
 /**
  * Converts a local file URI (Expo) to a Blob for Firebase Storage.
  * @param {string} uri - The local file URI (must have `file://` prefix).

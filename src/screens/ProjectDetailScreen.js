@@ -113,7 +113,9 @@ const ProjectDetailScreen = ({ navigation }) => {
     }
   };
 
-  // w
+  // we use this store the task id, it will work in a similar way
+  // to the boolean for the show hide modals, but conveys extra 
+  // information
   const handleTaskPress = (task) => {
     setSelectedTask(task);
   };
@@ -127,50 +129,49 @@ const ProjectDetailScreen = ({ navigation }) => {
         <View style={GlobalStyles.sectionContainer}>
           <View style={GlobalStyles.sectionHeader}>
             <Text style={GlobalStyles.sectionTitle}>Project Tasks</Text>
+            {/* Small plus in the top right hand corner for adding a task*/}
             <TouchableOpacity onPress={() => setAddTaskModalVisible(true)}>
               <FontAwesomeIcon icon={faPlus} style={styles.plusIcon} />
             </TouchableOpacity>
           </View>
-
+          {/* loading tasks is true then we display the activity indicator */}
           {loadingTasks ? (
             <ActivityIndicator size="medium" color="#ffffff" />
           ) : tasks.length > 0 ? (
+            // if there are tasks, then we display them as a flat lists
             <FlatList
               data={tasks}
               renderItem={({ item }) => (
-                <TouchableOpacity onPress={() => handleTaskPress(item)} style={styles.taskItem}>
-                  {/* ✅ Task Status Icon */}
+                <TouchableOpacity onPress={() => handleTaskPress(item)} style={styles.taskStatus}>
+                  {/* Task Status Icon, this will be an empty or checked circle */}
                   <FontAwesomeIcon
                     icon={item.status === "completed" ? faCheckCircle : faCircle}
                     style={item.status === "completed" ? styles.completedIcon : styles.pendingIcon}
                   />
-
-                  {/* ✅ Task Details */}
+                  {/* Task Details, such as name and owner */}
                   <View style={styles.taskInfo}>
                     <Text style={GlobalStyles.normalText}>{item.name}</Text>
                     <Text style={styles.assignedText}>Assigned to: {item.assignedTo || "Unassigned"}</Text>
                   </View>
-
-                  {/* ✅ Due Date */}
                   <Text style={GlobalStyles.normalText}>{new Date(item.dueDate).toLocaleDateString()}</Text>
                 </TouchableOpacity>
               )}
               keyExtractor={(item, index) => index.toString()}
             />
           ) : (
+            // if there are no tasks, then we display a message to communicate this
             <Text style={GlobalStyles.translucentText}>No tasks created yet.</Text>
           )}
         </View>
-
-        {/* ✅ Recent Activities Section */}
-        <View style={styles.projectContainer}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Recent Activities</Text>
+        {/* activities section, will show all activities associated with the project */}
+        <View style={GlobalStyles.sectionContainer}>
+          <View style={GlobalStyles.sectionHeader}>
+            <Text style={GlobalStyles.sectionTitle}>Recent Activities</Text>
             <TouchableOpacity onPress={() => setAddActivityModalVisible(true)}>
               <FontAwesomeIcon icon={faPlus} style={styles.plusIcon} />
             </TouchableOpacity>
           </View>
-
+          {/*activity indicator for when collecting this information from the database */}
           {loadingActivities ? (
             <ActivityIndicator size="medium" color="#ffffff" />
           ) : activities.length > 0 ? (
@@ -184,11 +185,12 @@ const ProjectDetailScreen = ({ navigation }) => {
               keyExtractor={(item, index) => index.toString()}
             />
           ) : (
+            // then text display if no recent activities
             <Text style={GlobalStyles.translucentText}>No recent activities.</Text>
           )}
         </View>
-
-        {/* ✅ Add Task Modal */}
+        {/* These are the various modals creating and viewing information about the tasks */}
+        {/* Add Task Modal */}
         <CreateTaskModal
           visible={addTaskModalVisible}
           onClose={() => setAddTaskModalVisible(false)}
@@ -197,15 +199,14 @@ const ProjectDetailScreen = ({ navigation }) => {
           projectUsers={projectUsers}
           createTaskWithSubtasks={createTaskWithSubtasks}
         />
-
-        {/* ✅ Add Activity Modal */}
+        {/* Add Activity Modal */}
         <AddActivityModal
           visible={addActivityModalVisible}
           onClose={() => setAddActivityModalVisible(false)}
           projectId={projectId}
         />
 
-        {/* ✅ Task Detail Modal */}
+        {/* Task Detail Modal */}
         {selectedTask && (
           <TaskDetailModal
             task={selectedTask}
@@ -216,7 +217,6 @@ const ProjectDetailScreen = ({ navigation }) => {
         )}
       </View>
 
-      {/* ✅ Bottom Navigation Bar */}
       <BottomBar navigation={navigation} activeScreen="ProjectDetail" />
     </GradientBackground>
   );
@@ -224,24 +224,7 @@ const ProjectDetailScreen = ({ navigation }) => {
 
 // ===== Page-Specific Styles ===== //
 const styles = StyleSheet.create({
-  projectContainer: {
-    backgroundColor: "#001524",
-    padding: 16,
-    borderRadius: 8,
-    marginBottom: 16,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 10,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#FFFFFF",
-  },
-  taskItem: {
+  taskStatus: {
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 10,

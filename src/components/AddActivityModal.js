@@ -1,3 +1,10 @@
+//================== Add Activity Modal.js ===========================//
+// This is a pop up window for adding an activity to the database
+// it allows the user to utilise OS features for uploading a photo or
+// file from their mobile device.
+// we utilise firebase storage for the document or image due to file
+// size limitations in firestore
+//====================================================================//
 import React, { useState } from "react";
 import {
   Modal,
@@ -14,6 +21,8 @@ import { collection, addDoc } from "firebase/firestore";
 import { auth, db } from "../config/firebaseConfig";
 
 const AddActivityModal = ({ visible, onClose, projectId }) => {
+  // define our various states, these will be used for storing
+  // inputs and status such as uploading icons
   const [activityType, setActivityType] = useState(null);
   const [message, setMessage] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -21,17 +30,14 @@ const AddActivityModal = ({ visible, onClose, projectId }) => {
 
   const user = auth.currentUser;
 
-  // ✅ Handle text message submission
+  // Handle text message submission
   const handleAddMessage = async () => {
-    if (!user) {
-      setError("You must be logged in to add an activity.");
-      return;
-    }
+    // check to make sure there is a message to be uploaded
     if (!message.trim()) {
       setError("Message cannot be empty!");
       return;
     }
-
+    // then indicate a message is being uploaded
     setUploading(true);
     try {
       await addDoc(collection(db, "projects", projectId, "activities"), {
