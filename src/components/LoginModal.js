@@ -1,11 +1,18 @@
+//================== LonginModal.js ===========================//
+// The modal is a pop up to log the user in, simple form
+// requesting username and password. Uses the auth service
+// for validation, and updates the user context
+//========================================================//
 import React, { useEffect, useRef, useState } from 'react';
 import { 
   View, Text, TextInput, TouchableOpacity, Modal, 
   StyleSheet, KeyboardAvoidingView, Platform, Alert 
 } from 'react-native';
-import GlobalStyles from '../styles/styles';
+
 import { logIn } from '../services/authService';
 import { useUser } from '../contexts/UserContext';
+
+import GlobalStyles from '../styles/styles';
 
 const LoginModal = ({ visible, onClose, navigation }) => {
   // Set up states for capturing login details
@@ -16,27 +23,33 @@ const LoginModal = ({ visible, onClose, navigation }) => {
 
   useEffect(() => {
     if (visible) {
-      // Auto-focus email input when modal opens
+      // when first opening the modal, we auto focus on the email
       setTimeout(() => {
         usernameInputRef.current?.focus();
       }, 100);
     }
   }, [visible]);
 
-  // Handle login functionality
+  // functionality to handle the login
   const handleLogin = async () => {
+    // try catch to authenticate the user
     try {
+      // log the user in using the login details
       const user = await logIn(email, password);
+      // then set the user details, these will be used throughout the app
       setUserId(user.uid);
       setUserEmail(user.email);
 
-      // ✅ Extract only the first name from "Katherine Lambert"
+      // grab the first name from the associated user account
       const firstName = user.displayName.split(" ")[0];
       setFirstName(firstName);
 
-      onClose(); // Close the modal after login
+      onClose();
+      // on successful login we navigate to the summary page
       navigation.navigate('Summary');
     } catch (error) {
+      // otherwise if there is an error display the message
+      // to the user
       Alert.alert("Login Error", error.message);
     }
   };
@@ -71,7 +84,6 @@ const LoginModal = ({ visible, onClose, navigation }) => {
               accessibilityHint="Enter your email"
             />
             
-            {/* Spacing between inputs */}
             <View style={styles.inputSpacing} />
 
             <TextInput 
@@ -94,7 +106,6 @@ const LoginModal = ({ visible, onClose, navigation }) => {
               <Text style={GlobalStyles.primaryButtonText}>Login</Text>
             </TouchableOpacity>
 
-            {/* Close Button - Underlined White Text */}
             <TouchableOpacity 
               onPress={onClose}
               accessibilityLabel="Close button"
@@ -131,7 +142,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   inputSpacing: {
-    height: 15, // Adds spacing between email and password inputs
+    height: 15,
   },
   closeButton: {
     color: '#ffffff',

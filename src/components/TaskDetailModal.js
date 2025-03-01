@@ -5,6 +5,9 @@
 // - Add messages and file uploads (documents & images) directly to the task.
 // - Preview images/files before uploading.
 // - Mark the task as completed with a confirmation prompt.
+// - Improved modal styling to match the login modal.
+// - Enhanced UX for attaching documents, images, and messages.
+// - Icons for file, image, and message upload instead of buttons (using Font Awesome).
 //========================================================//
 
 import React, { useState, useEffect } from "react";
@@ -13,22 +16,39 @@ import {
   Text,
   TouchableOpacity,
   Modal,
-  TextInput,
   ActivityIndicator,
-  FlatList,
   Image,
   Alert,
+  StyleSheet,
 } from "react-native";
 import * as DocumentPicker from "expo-document-picker"; // For file selection
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useUser } from "../contexts/UserContext";
 import GlobalStyles from "../styles/styles";
+import { FontAwesome } from "@expo/vector-icons"; // Font Awesome Icons
 import {
   fetchRecentActivities,
   addActivity,
 } from "../services/activityService"; // Import activity functions
 
 const TaskDetailModal = ({ task, visible, onClose, onUpdateTask }) => {
+  // If task is undefined, show a loading state
+  if (!task) {
+    return (
+      <Modal animationType="fade" transparent={true} visible={visible} onRequestClose={onClose}>
+        <View style={styles.overlay}>
+          <View style={styles.modalContainer}>
+            <Text style={GlobalStyles.headerText}>Loading Task...</Text>
+            <ActivityIndicator size="large" color="orange" />
+            <TouchableOpacity onPress={onClose}>
+              <Text style={styles.closeButton}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    );
+  }
+
   // Grab user details from context
   const { userId } = useUser();
 
@@ -36,33 +56,8 @@ const TaskDetailModal = ({ task, visible, onClose, onUpdateTask }) => {
   const [assignedTo, setAssignedTo] = useState(task.owner);
   const [dueDate, setDueDate] = useState(new Date(task.dueDate));
   const [showDatePicker, setShowDatePicker] = useState(false);
-
-  // State for managing activities
-  const [activities, setActivities] = useState([]);
-  const [loadingActivities, setLoadingActivities] = useState(true);
-  const [newMessage, setNewMessage] = useState("");
   const [uploading, setUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
-
-  // Fetch activities when the modal opens
-  useEffect(() => {
-    if (visible) {
-      fetchActivities();
-    }
-  }, [visible]);
-
-  // Fetch recent activities related to this task
-  const fetchActivities = async () => {
-    setLoadingActivities(true);
-    try {
-      const fetchedActivities = await fetchRecentActivities(task.projectId, task.id);
-      setActivities(fetchedActivities);
-    } catch (error) {
-      console.error("TaskDetailModal - Error fetching activities:", error);
-    } finally {
-      setLoadingActivities(false);
-    }
-  };
 
   // Handle marking task as completed with confirmation
   const handleMarkAsDone = () => {
@@ -71,13 +66,7 @@ const TaskDetailModal = ({ task, visible, onClose, onUpdateTask }) => {
       "Are you sure you want to mark this task as done?",
       [
         { text: "Cancel", style: "cancel" },
-        {
-          text: "Yes",
-          onPress: () => {
-            onUpdateTask({ ...task, status: "completed" });
-            onClose();
-          },
-        },
+        { text: "Yes", onPress: () => { onUpdateTask({ ...task, status: "completed" }); onClose(); } },
       ]
     );
   };
@@ -90,34 +79,11 @@ const TaskDetailModal = ({ task, visible, onClose, onUpdateTask }) => {
     setShowDatePicker(false);
   };
 
-  // Handle adding a new message to the task
-  const handleAddMessage = async () => {
-    if (!newMessage.trim()) return; // Prevent empty messages
-
-    try {
-      await addActivity(task.projectId, task.id, {
-        type: "message",
-        content: newMessage,
-        timestamp: new Date(),
-        userId,
-      });
-      setNewMessage("");
-      fetchActivities(); // Refresh the activity list
-    } catch (error) {
-      console.error("TaskDetailModal - Error adding message:", error);
-    }
-  };
-
   // Handle file selection
   const handleFileUpload = async () => {
     try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: "*/*",
-        multiple: false,
-      });
-
+      const result = await DocumentPicker.getDocumentAsync({ type: "*/*", multiple: false });
       if (result.canceled) return;
-
       const file = result.assets[0];
       setSelectedFile({ name: file.name, uri: file.uri, type: file.mimeType });
     } catch (error) {
@@ -125,10 +91,21 @@ const TaskDetailModal = ({ task, visible, onClose, onUpdateTask }) => {
     }
   };
 
+  // Handle image selection
+  const handleImageUpload = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({ type: "image/*", multiple: false });
+      if (result.canceled) return;
+      const file = result.assets[0];
+      setSelectedFile({ name: file.name, uri: file.uri, type: file.mimeType });
+    } catch (error) {
+      console.error("TaskDetailModal - Error selecting image:", error);
+    }
+  };
+
   // Handle confirming file upload
   const handleConfirmUpload = async () => {
     if (!selectedFile) return;
-
     setUploading(true);
     try {
       await addActivity(task.projectId, task.id, {
@@ -139,7 +116,6 @@ const TaskDetailModal = ({ task, visible, onClose, onUpdateTask }) => {
         userId,
       });
       setSelectedFile(null);
-      fetchActivities(); // Refresh the activity list
     } catch (error) {
       console.error("TaskDetailModal - Error uploading file:", error);
     } finally {
@@ -148,69 +124,98 @@ const TaskDetailModal = ({ task, visible, onClose, onUpdateTask }) => {
   };
 
   return (
-    <Modal animationType="slide" transparent={true} visible={visible} onRequestClose={onClose}>
-      <View style={GlobalStyles.modalContainer}>
-        <View style={GlobalStyles.sectionContainer}>
-          {/* Task Details */}
+    <Modal animationType="fade" transparent={true} visible={visible} onRequestClose={onClose}>
+      <View style={styles.overlay}>
+        <View style={styles.modalContainer}>
           <Text style={GlobalStyles.headerText}>{task.name}</Text>
           <Text style={GlobalStyles.normalText}>{task.description}</Text>
-
-          {/* Assigned To */}
-          <Text style={GlobalStyles.subheaderText}>Assigned To: {assignedTo}</Text>
+          <Text style={GlobalStyles.normalText}>Assigned To: {assignedTo}</Text>
 
           {/* Due Date */}
           <TouchableOpacity onPress={() => setShowDatePicker(true)}>
-            <Text style={GlobalStyles.subheaderText}>Due Date: {dueDate.toDateString()}</Text>
+            <Text style={GlobalStyles.normalText}>Due Date: {dueDate.toDateString()}</Text>
           </TouchableOpacity>
 
           {showDatePicker && (
             <DateTimePicker value={dueDate} mode="date" display="default" onChange={handleDueDateChange} />
           )}
 
-          {/* Mark as Done */}
-          <TouchableOpacity style={GlobalStyles.primaryButton} onPress={handleMarkAsDone}>
-            <Text style={GlobalStyles.primaryButtonText}>Mark as Done</Text>
-          </TouchableOpacity>
+          {/* Upload Options */}
+          <View style={styles.uploadOptions}>
+            <TouchableOpacity onPress={handleFileUpload} style={styles.uploadIcon}>
+              <FontAwesome name="paperclip" size={30} color="white" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleImageUpload} style={styles.uploadIcon}>
+              <FontAwesome name="image" size={30} color="white" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.uploadIcon} disabled={true}>
+              <FontAwesome name="comment" size={30} color="gray" />
+            </TouchableOpacity>
+          </View>
 
-          {/* Upload File Section */}
-          <Text style={GlobalStyles.sectionTitle}>Attach a Document/Image</Text>
-          <TouchableOpacity style={GlobalStyles.secondaryButton} onPress={handleFileUpload}>
-            <Text style={GlobalStyles.secondaryButtonText}>Select File</Text>
-          </TouchableOpacity>
-
+          {/* File Preview */}
           {selectedFile && (
-            <View style={GlobalStyles.listItem}>
+            <View style={styles.filePreview}>
               {selectedFile.type.includes("image") ? (
-                <Image source={{ uri: selectedFile.uri }} style={{ width: 100, height: 100, borderRadius: 5 }} />
+                <Image source={{ uri: selectedFile.uri }} style={styles.imagePreview} />
               ) : (
                 <Text style={GlobalStyles.normalText}>{selectedFile.name}</Text>
               )}
-              <TouchableOpacity style={GlobalStyles.smallPrimaryButton} onPress={handleConfirmUpload} disabled={uploading}>
-                <Text style={GlobalStyles.smallButtonText}>{uploading ? "Uploading..." : "Upload"}</Text>
-              </TouchableOpacity>
             </View>
           )}
 
-          {/* Add New Message */}
-          <TextInput
-            style={GlobalStyles.textInput}
-            placeholder="Add a message..."
-            placeholderTextColor="#ccc"
-            value={newMessage}
-            onChangeText={setNewMessage}
-          />
-          <TouchableOpacity style={GlobalStyles.secondaryButton} onPress={handleAddMessage}>
-            <Text style={GlobalStyles.secondaryButtonText}>Send Message</Text>
+          {/* Upload Button */}
+          <TouchableOpacity style={GlobalStyles.primaryButton} onPress={handleConfirmUpload} disabled={!selectedFile || uploading}>
+            <Text style={GlobalStyles.primaryButtonText}>{uploading ? "Uploading..." : "Upload"}</Text>
           </TouchableOpacity>
 
           {/* Close Button */}
-          <TouchableOpacity style={GlobalStyles.secondaryButton} onPress={onClose}>
-            <Text style={GlobalStyles.secondaryButtonText}>Close</Text>
+          <TouchableOpacity onPress={onClose}>
+            <Text style={styles.closeButton}>Close</Text>
           </TouchableOpacity>
         </View>
       </View>
     </Modal>
   );
 };
+
+// ===== Page-Specific Styles ===== //
+const styles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContainer: {
+    width: "85%",
+    padding: 20,
+    backgroundColor: "#001524",
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  uploadOptions: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    width: "80%",
+    marginVertical: 10,
+  },
+  uploadIcon: {
+    padding: 10,
+  },
+  filePreview: {
+    marginTop: 10,
+  },
+  imagePreview: {
+    width: 80,
+    height: 80,
+    borderRadius: 5,
+  },
+  closeButton: {
+    color: "#ffffff",
+    marginTop: 10,
+    fontSize: 16,
+  },
+});
 
 export default TaskDetailModal;

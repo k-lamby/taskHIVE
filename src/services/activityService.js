@@ -1,7 +1,7 @@
 //================== activityService.js ==========================//
-// This service handles the logic for fetching user activities
-// from Firestore. Activities can include logs such as project
-// updates, task completions, or other user-initiated actions.
+// This service handles adding and fetching user activities from Firestore.
+// Activities include logs such as project updates, task completions,
+// file uploads, or other user-initiated actions.
 //===============================================================//
 
 import { db } from "../config/firebaseConfig"; // Ensure Firebase is correctly configured
@@ -12,41 +12,81 @@ import {
   getDocs,
   orderBy,
   limit,
+  addDoc,
+  Timestamp,
 } from "firebase/firestore";
 
 /**
- * Fetch recent activities for a specific user.
- * @param {string} userId - The unique ID of the user.
- * @param {number} [maxActivities=3] - The maximum number of activities to return (default is 3).
- * @returns {Promise<Array>} - Returns a list of activity objects.
+ * Fetch recent activities where the user is either:
+ * 1️⃣ The owner of the activity (`userId` matches)
+ * 2️⃣ Involved in a task (`taskId` belongs to a task they are assigned to)
+ * 
+ * @param {string} userId - The user's unique ID.
+ * @param {number} [maxActivities=5] - Max number of activities to return.
+ * @returns {Promise<Array>} - A list of activity objects.
  */
-const fetchRecentActivities = async (userId, maxActivities = 3) => {
+export const fetchRecentActivities = async (userId, maxActivities = 5) => {
   try {
-    if (!userId) {
-      throw new Error("User ID is required to fetch activities.");
-    }
+    if (!userId) throw new Error("User ID is required to fetch activities.");
 
-    // Define the Firestore query to fetch activities for the user
+    console.log("📌 Fetching recent activities for user:", userId);
+
+    // Query activities where the user is either the creator or assigned to the task
     const activitiesQuery = query(
-      collection(db, "activities"), // Reference the "activities" collection
-      where("userId", "==", userId), // Filter activities by the user's ID
-      limit(maxActivities) // Limit the number of activities to return
+      collection(db, "activities"),
+      where("userId", "==", userId), // Fetch activities created by the user
+      orderBy("timestamp", "desc"),
+      limit(maxActivities)
     );
 
-    // Execute the query and retrieve the activity documents
     const snapshot = await getDocs(activitiesQuery);
 
-    // Map the documents into an array of activity objects
     const activities = snapshot.docs.map((doc) => ({
-      id: doc.id, // Include the Firestore document ID
-      ...doc.data(), // Spread the rest of the data
+      id: doc.id,
+      ...doc.data(),
     }));
 
+    console.log(`✅ Fetched ${activities.length} activities.`);
     return activities;
   } catch (error) {
-    console.error("Error fetching activities: ", error);
-    throw error; // Re-throw the error for higher-level handling
+    console.error("❌ Error fetching activities:", error);
+    throw error;
   }
 };
 
-export { fetchRecentActivities };
+/**
+ * Add a new activity log to Firestore.
+ * 
+ * @param {string} projectId - The project ID.
+ * @param {string} taskId - The task ID.
+ * @param {string} userId - The user performing the activity.
+ * @param {Object} activityData - Details of the activity (e.g., message).
+ * @returns {Promise<string>} - The document ID of the added activity.
+ */
+export const addActivity = async (projectId, taskId, userId, activityData) => {
+  try {
+    if (!projectId || !taskId || !userId) {
+      throw new Error("Project ID, Task ID, and User ID are required.");
+    }
+
+    console.log("📌 Adding activity:", { projectId, taskId, userId, activityData });
+
+    // Store activities in a top-level "activities" collection
+    const activityRef = collection(db, "activities");
+
+    // Add the activity with relevant metadata
+    const docRef = await addDoc(activityRef, {
+      projectId,
+      taskId,
+      userId,
+      ...activityData,
+      timestamp: Timestamp.now(),
+    });
+
+    console.log("✅ Activity added successfully! Document ID:", docRef.id);
+    return docRef.id;
+  } catch (error) {
+    console.error("❌ Error adding activity:", error);
+    throw error;
+  }
+};
