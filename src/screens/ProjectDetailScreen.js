@@ -23,6 +23,8 @@ import { useRoute } from "@react-navigation/native";
 import { fetchTasksByProjectId, createTaskWithSubtasks } from "../services/taskService";
 import { fetchRecentActivities } from "../services/activityService";
 import { fetchProjectUserIds } from "../services/projectService";
+import {fetchUserNamesByIds} from "../services/authService";
+
 // reusable components for navigation
 import TopBar from "../components/TopBar";
 import BottomBar from "../components/BottomBar";
@@ -56,7 +58,7 @@ const ProjectDetailScreen = ({ navigation }) => {
 
   const [selectedTask, setSelectedTask] = useState(null);
 
-  //grab the tasks activities and users 
+  // grab the tasks activities and users 
   // for this particular project
   useEffect(() => {
     fetchTasks();
@@ -103,11 +105,18 @@ const ProjectDetailScreen = ({ navigation }) => {
   // we then want to grab the user ids associated with this project
   // this allows us to display ownership of tasks
   // but also drives the user selection for changing ownership
+  // we map these to show both user ids and user names
+  // so that when we pass them to the select user wheel we can display the name
   const fetchUsers = async () => {
     try {
-      // uses the projectService to grab the users associated with the project
       const userIds = await fetchProjectUserIds(projectId);
-      setProjectUsers(userIds);
+      // project users returns an array of key value pairs
+      const projectUsers = await fetchUserNamesByIds(userIds);
+      const userArray = Object.entries(projectUsers).map(([id, name]) => ({
+        id,
+        name: name || "Unknown",
+      }));
+      setProjectUsers(userArray);
     } catch (error) {
       console.error("ProjectDetailsScreen - Error fetching project users:", error);
     }
@@ -141,22 +150,26 @@ const ProjectDetailScreen = ({ navigation }) => {
             // if there are tasks, then we display them as a flat lists
             <FlatList
               data={tasks}
-              renderItem={({ item }) => (
-                <TouchableOpacity onPress={() => handleTaskPress(item)} style={styles.taskStatus}>
-                  {/* Task Status Icon, this will be an empty or checked circle */}
-                  <FontAwesomeIcon
-                    icon={item.status === "completed" ? faCheckCircle : faCircle}
-                    style={item.status === "completed" ? styles.completedIcon : styles.pendingIcon}
-                  />
-                  {/* Task Details, such as name and owner */}
-                  <View style={styles.taskInfo}>
-                    <Text style={GlobalStyles.normalText}>{item.name}</Text>
-                    <Text style={styles.assignedText}>Assigned to: {item.assignedTo || "Unassigned"}</Text>
-                  </View>
-                  <Text style={GlobalStyles.normalText}>{new Date(item.dueDate).toLocaleDateString()}</Text>
-                </TouchableOpacity>
-              )}
-              keyExtractor={(item, index) => index.toString()}
+              renderItem={({ item }) => {
+                // get the assigned user name from the id
+                const assignedUser = projectUsers.find(user => user.id === item.owner);
+                return (
+                  <TouchableOpacity onPress={() => handleTaskPress(item)} style={styles.taskStatus}>
+                    <FontAwesomeIcon
+                      icon={item.status === "completed" ? faCheckCircle : faCircle}
+                      style={item.status === "completed" ? styles.completedIcon : styles.pendingIcon}
+                    />
+                    <View style={styles.taskInfo}>
+                      <Text style={GlobalStyles.normalText}>{item.name}</Text>
+                      <Text style={styles.assignedText}>
+                        Assigned to: {assignedUser ? assignedUser.name : "Unassigned"}
+                      </Text>
+                    </View>
+                    <Text style={GlobalStyles.normalText}>{new Date(item.dueDate).toLocaleDateString()}</Text>
+                  </TouchableOpacity>
+                );
+              }}
+              keyExtractor={(item) => item.id}
             />
           ) : (
             // if there are no tasks, then we display a message to communicate this
@@ -210,6 +223,7 @@ const ProjectDetailScreen = ({ navigation }) => {
         {selectedTask && (
           <TaskDetailModal
             task={selectedTask}
+            projectUsers={projectUsers}
             visible={!!selectedTask}
             onClose={() => setSelectedTask(null)}
             onUpdateTask={fetchTasks}

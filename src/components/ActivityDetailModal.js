@@ -1,3 +1,7 @@
+//================== Activity Detail Modal.js ===========================//
+// This will display all the activities that have occured that are associated
+// with the task.
+//====================================================================//
 import React from "react";
 import {
   View,
@@ -8,6 +12,8 @@ import {
 } from "react-native";
 import GlobalStyles from "../styles/styles";
 
+// takes the activity details being passed to it
+// whether the modal is visible or not, and the action on close
 const ActivityDetailModal = ({ activity, visible, onClose }) => {
   if (!activity) return null;
 
@@ -16,21 +22,14 @@ const ActivityDetailModal = ({ activity, visible, onClose }) => {
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
           <Text style={styles.modalTitle}>{activity.type}</Text>
-
-          {/* Uploaded By */}
           <Text style={styles.label}>Uploaded By: {activity.uploadedBy}</Text>
-
-          {/* Timestamp */}
           <Text style={styles.label}>Date: {new Date(activity.timestamp).toLocaleString()}</Text>
-
-          {/* Description */}
+          {/* If there is a description associated with the activity then display that */}
           {activity.description ? (
             <Text style={styles.modalText}>{activity.description}</Text>
           ) : (
             <Text style={styles.placeholderText}>No description provided.</Text>
           )}
-
-          {/* Close Button */}
           <TouchableOpacity style={GlobalStyles.secondaryButton} onPress={onClose}>
             <Text style={GlobalStyles.secondaryButtonText}>Close</Text>
           </TouchableOpacity>
@@ -40,7 +39,7 @@ const ActivityDetailModal = ({ activity, visible, onClose }) => {
   );
 };
 
-// ===== Styles ===== //
+// ===== Page specific styles ===== //
 const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,

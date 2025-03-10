@@ -1,3 +1,8 @@
+//================== Add Task Modal.js ===========================//
+// This is a pop up window for adding a task to the database
+// it slides up from the bottom, very similar to the add projects
+// modal. Allows the user to add the task/description and assign to a user
+//====================================================================//
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -13,50 +18,22 @@ import CustomDatePicker from "./CustomDatePicker";
 import UserPickerModal from "./UserPickerModal";
 import GlobalStyles from "../styles/styles";
 import { useUser } from "../contexts/UserContext";
-import { fetchUserNamesByIds } from "../services/authService"; // ✅ Fetch user names from Firestore
 
 const AddTaskModal = ({ visible, onClose, onTaskAdded, projectId, projectUsers, createTaskWithSubtasks }) => {
-  const { userId, firstName } = useUser(); // ✅ Get current user's ID and first name
+  // use the user context to grab the current user details
+  // the assign to, will have this as the default user
+  const { userId, firstName } = useUser(); 
 
+  // use this to store the form inputs
   const [taskName, setTaskName] = useState("");
   const [taskDescription, setTaskDescription] = useState("");
   const [dueDate, setDueDate] = useState(new Date());
-  const [assignedUser, setAssignedUser] = useState(firstName); // ✅ Default to current user's name
+  const [assignedUser, setAssignedUser] = useState(userId);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showUserPicker, setShowUserPicker] = useState(false);
-  const [filteredUsers, setFilteredUsers] = useState([]);
 
-  console.log("📌 Received projectUsers in AddTaskModal:", projectUsers);
-
-  // ✅ Fetch user names and format `projectUsers` into objects with { id, name }
-  useEffect(() => {
-    const updateUsers = async () => {
-      if (Array.isArray(projectUsers) && userId) {
-        try {
-          console.log("🔍 Fetching user names for:", projectUsers);
-
-          const userNames = await fetchUserNamesByIds(projectUsers);
-          console.log("✅ Fetched user names:", userNames);
-
-          const formattedUsers = projectUsers.map((id) => ({
-            id,
-            name: userNames[id] || "Unknown",
-          }));
-
-          // ✅ Ensure the current user is at the top
-          const updatedUsers = [{ id: userId, name: firstName }, ...formattedUsers.filter((user) => user.id !== userId)];
-          setFilteredUsers(updatedUsers);
-        } catch (error) {
-          console.error("❌ Error updating project users:", error);
-        }
-      } else {
-        console.warn("⚠️ projectUsers is not a valid array:", projectUsers);
-      }
-    };
-
-    updateUsers();
-  }, [projectUsers, userId, firstName]);
-
+  // We then need to grab all the users associated with this project
+  // the user should only be able to assign tasks to this group
   const handleAddTask = async () => {
     if (!taskName.trim()) {
       alert("Task name is required!");
@@ -142,8 +119,8 @@ const AddTaskModal = ({ visible, onClose, onTaskAdded, projectId, projectUsers, 
       <UserPickerModal
   visible={showUserPicker}
   onClose={() => setShowUserPicker(false)}
-  onUserSelected={(user) => setAssignedUser(user.name)} // ❌ Stores name instead of ID
-  projectUsers={filteredUsers}
+  onUserSelected={(user) => setAssignedUser(user.id)} // ❌ Stores name instead of ID
+  projectUsers={projectUsers}
 />
     </Modal>
   );

@@ -107,6 +107,10 @@ const fetchUserNamesByIds = async (userIds) => {
       if (userDoc.exists()) {
         const userData = userDoc.data();
         names[userId] = userData.firstName || "Unknown"; // ✅ Store first name
+        console.log("names")
+        console.log(names)
+        console.log("userdata")
+        console.log(userData)
       } else {
         names[userId] = "Unknown"; // Fallback if user is missing
       }

@@ -1,218 +1,81 @@
-//================== TaskDetailModal.js ===========================//
-// This modal is used to display and edit details for a specific task.
-// It shows task name, description, assigned user, and due date.
-// The modal now also includes the ability to:
-// - Add messages and file uploads (documents & images) directly to the task.
-// - Preview images/files before uploading.
-// - Mark the task as completed with a confirmation prompt.
-// - Uses a custom date picker for selecting due dates.
-//========================================================//
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, Modal, Pressable } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
-import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Modal,
-  TextInput,
-  ActivityIndicator,
-  FlatList,
-  Image,
-  Alert,
-} from "react-native";
-import * as DocumentPicker from "expo-document-picker";
-import { useUser } from "../contexts/UserContext";
-import GlobalStyles from "../styles/styles";
-import CustomDatePicker from "../components/CustomDatePicker";
-import {
-  fetchRecentActivities,
-  addActivity,
-} from "../services/activityService";
+import GlobalStyles from '../styles/styles';
 
-const TaskDetailModal = ({ task, visible, onClose, onUpdateTask }) => {
-  // Grab user details from context
-  const { userId } = useUser();
+const CustomDatePicker = ({ visible, onClose, onDateChange, title }) => {
+    const [date, setDate] = useState(new Date());
 
-  // Local state for managing task details
-  const [assignedTo, setAssignedTo] = useState(task.owner);
-  const [dueDate, setDueDate] = useState(new Date(task.dueDate));
-  const [showDatePicker, setShowDatePicker] = useState(false);
+    // Handler for when the user changes the date picker
+    const handleDateChange = (event, selectedDate) => {
+        const currentDate = selectedDate || date;
+        setDate(currentDate); 
+    };
 
-  // State for managing activities
-  const [activities, setActivities] = useState([]);
-  const [loadingActivities, setLoadingActivities] = useState(true);
-  const [newMessage, setNewMessage] = useState("");
-  const [uploading, setUploading] = useState(false);
-  const [selectedFile, setSelectedFile] = useState(null);
+    // Called when the user hits the done button
+    const handleDone = () => {
+        onDateChange(date);
+        onClose();
+    };
 
-  // Fetch activities when the modal opens
-  useEffect(() => {
-    if (visible) {
-      fetchActivities();
-    }
-  }, [visible]);
+    return (
+        <Modal visible={visible} animationType="slide" transparent={true}>
+            <View style={styles.overlay}>
+                <View style={styles.modalContainer}>
+                    {/* Custom title for the modal */}
+                    <Text style={GlobalStyles.headerText}>{title}</Text>
+                    
+                    <DateTimePicker
+                        value={date}
+                        mode="date" 
+                        display="spinner"
+                        onChange={handleDateChange}
+                    />
 
-  // Fetch recent activities related to this task
-  const fetchActivities = async () => {
-    setLoadingActivities(true);
-    try {
-      const fetchedActivities = await fetchRecentActivities(task.projectId, task.id);
-      setActivities(fetchedActivities);
-    } catch (error) {
-      console.error("TaskDetailModal - Error fetching activities:", error);
-    } finally {
-      setLoadingActivities(false);
-    }
-  };
-
-  // Handle marking task as completed with confirmation
-  const handleMarkAsDone = () => {
-    Alert.alert(
-      "Confirm Completion",
-      "Are you sure you want to mark this task as done?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Yes",
-          onPress: () => {
-            onUpdateTask({ ...task, status: "completed" });
-            onClose();
-          },
-        },
-      ]
-    );
-  };
-
-  // Handle due date change (called from CustomDatePicker)
-  const handleDueDateChange = (selectedDate) => {
-    setDueDate(selectedDate);
-  };
-
-  // Handle adding a new message to the task
-  const handleAddMessage = async () => {
-    if (!newMessage.trim()) return; // Prevent empty messages
-
-    try {
-      await addActivity(task.projectId, task.id, {
-        type: "message",
-        content: newMessage,
-        timestamp: new Date(),
-        userId,
-      });
-      setNewMessage("");
-      fetchActivities(); // Refresh the activity list
-    } catch (error) {
-      console.error("TaskDetailModal - Error adding message:", error);
-    }
-  };
-
-  // Handle file selection
-  const handleFileUpload = async () => {
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: "*/*",
-        multiple: false,
-      });
-
-      if (result.canceled) return;
-
-      const file = result.assets[0];
-      setSelectedFile({ name: file.name, uri: file.uri, type: file.mimeType });
-    } catch (error) {
-      console.error("TaskDetailModal - Error selecting file:", error);
-    }
-  };
-
-  // Handle confirming file upload
-  const handleConfirmUpload = async () => {
-    if (!selectedFile) return;
-
-    setUploading(true);
-    try {
-      await addActivity(task.projectId, task.id, {
-        type: "file",
-        content: selectedFile.name,
-        fileUrl: selectedFile.uri,
-        timestamp: new Date(),
-        userId,
-      });
-      setSelectedFile(null);
-      fetchActivities(); // Refresh the activity list
-    } catch (error) {
-      console.error("TaskDetailModal - Error uploading file:", error);
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  return (
-    <Modal animationType="slide" transparent={true} visible={visible} onRequestClose={onClose}>
-      <View style={GlobalStyles.modalContainer}>
-        <View style={GlobalStyles.sectionContainer}>
-          {/* Task Details */}
-          <Text style={GlobalStyles.headerText}>{task.name}</Text>
-          <Text style={GlobalStyles.normalText}>{task.description}</Text>
-
-          {/* Assigned To */}
-          <Text style={GlobalStyles.subheaderText}>Assigned To: {assignedTo}</Text>
-
-          {/* Due Date */}
-          <TouchableOpacity onPress={() => setShowDatePicker(true)}>
-            <Text style={GlobalStyles.subheaderText}>Due Date: {dueDate.toDateString()}</Text>
-          </TouchableOpacity>
-
-          {/* Show Custom Date Picker Modal */}
-          <CustomDatePicker
-            visible={showDatePicker}
-            onClose={() => setShowDatePicker(false)}
-            onDateChange={handleDueDateChange}
-            title="Select Due Date"
-          />
-
-          {/* Mark as Done */}
-          <TouchableOpacity style={GlobalStyles.primaryButton} onPress={handleMarkAsDone}>
-            <Text style={GlobalStyles.primaryButtonText}>Mark as Done</Text>
-          </TouchableOpacity>
-
-          {/* Upload File Section */}
-          <Text style={GlobalStyles.sectionTitle}>Attach a Document/Image</Text>
-          <TouchableOpacity style={GlobalStyles.secondaryButton} onPress={handleFileUpload}>
-            <Text style={GlobalStyles.secondaryButtonText}>Select File</Text>
-          </TouchableOpacity>
-
-          {selectedFile && (
-            <View style={GlobalStyles.listItem}>
-              {selectedFile.type.includes("image") ? (
-                <Image source={{ uri: selectedFile.uri }} style={{ width: 100, height: 100, borderRadius: 5 }} />
-              ) : (
-                <Text style={GlobalStyles.normalText}>{selectedFile.name}</Text>
-              )}
-              <TouchableOpacity style={GlobalStyles.smallPrimaryButton} onPress={handleConfirmUpload} disabled={uploading}>
-                <Text style={GlobalStyles.smallButtonText}>{uploading ? "Uploading..." : "Upload"}</Text>
-              </TouchableOpacity>
+                    {/* Button container */}
+                    <View style={styles.buttonContainer}>
+                        <Pressable style={GlobalStyles.primaryButton} onPress={handleDone}>
+                            <Text style={GlobalStyles.primaryButtonText}>Done</Text>
+                        </Pressable>
+                        <Pressable onPress={onClose}>
+                            <Text style={styles.closeButton}>Close</Text>
+                        </Pressable>
+                    </View>
+                </View>
             </View>
-          )}
-
-          {/* Add New Message */}
-          <TextInput
-            style={GlobalStyles.textInput}
-            placeholder="Add a message..."
-            placeholderTextColor="#ccc"
-            value={newMessage}
-            onChangeText={setNewMessage}
-          />
-          <TouchableOpacity style={GlobalStyles.secondaryButton} onPress={handleAddMessage}>
-            <Text style={GlobalStyles.secondaryButtonText}>Send Message</Text>
-          </TouchableOpacity>
-
-          {/* Close Button */}
-          <TouchableOpacity style={GlobalStyles.secondaryButton} onPress={onClose}>
-            <Text style={GlobalStyles.secondaryButtonText}>Close</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </Modal>
-  );
+        </Modal>
+    );
 };
 
-export default TaskDetailModal;
+// Styles for the component
+const styles = StyleSheet.create({
+    overlay: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalContainer: {
+        width: '80%',
+        backgroundColor: '#001524', 
+        borderRadius: 20,
+        padding: 20, 
+        alignItems: 'center',
+    },
+    buttonContainer: {
+        flexDirection: 'column', // ✅ Stacks buttons vertically
+        alignItems: 'center',
+        width: '100%',
+        marginTop: 20,
+        gap: 10, // Adds spacing between the buttons
+    },
+    closeButton: {
+        marginTop: 10,
+        color: "#FFFFFF",
+        textDecorationLine: "underline",
+        textAlign: "center",
+    },
+});
+
+export default CustomDatePicker;

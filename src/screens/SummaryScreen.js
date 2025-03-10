@@ -1,3 +1,8 @@
+//================== SummaryScreen.js ===========================//
+// This is the landing page for the user on login, it will display
+// featured projects, featured tasks and any recent activity
+//========================================================//
+
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -14,44 +19,43 @@ import { faBolt } from "@fortawesome/free-solid-svg-icons";
 import TopBar from "../components/TopBar";
 import BottomBar from "../components/BottomBar";
 import GradientBackground from "../components/GradientBackground";
-import CreateProjectModal from "../components/CreateProjectModal";
 import useProjectService from "../services/projectService";
-import { fetchTasksWithSubtasksByOwner } from "../services/taskService";
+import { fetchTasksForAssignedProjects } from "../services/taskService"; 
 import { fetchRecentActivities } from "../services/activityService";
 import { useUser } from "../contexts/UserContext";
 import GlobalStyles from "../styles/styles";
 
 const SummaryScreen = ({ navigation }) => {
+  // State variables for storing projects, tasks, and activities
   const [projects, setProjects] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [activities, setActivities] = useState([]);
+
+  // state variables for displaying loading icon, or errors
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isFormVisible, setFormVisible] = useState(false);
 
-  const [selectedTask, setSelectedTask] = useState(null);
-  const [selectedActivity, setSelectedActivity] = useState(null);
-
+  // Fetch user details from context
   const { userId, userEmail, firstName } = useUser();
+
+  // Fetch project service functions
   const { fetchProjects } = useProjectService();
 
+  // Fetch data when the component mounts or userId changes
   useEffect(() => {
     const fetchData = async () => {
-      if (!userId || !userEmail) {
-        console.warn("User ID or email is missing. Skipping fetch.");
-        setLoading(false);
-        return;
-      }
-
       try {
         setLoading(true);
 
+        // fetch the user's projects (limit to 3 for display)
         const projectData = await fetchProjects();
         setProjects(projectData.slice(0, 3));
 
-        const userTasks = await fetchTasksWithSubtasksByOwner(userId);
-        setTasks(userTasks.slice(0, 3));
+        // Fetch tasks for projects the user is assigned to (limit to 3)
+        const assignedTasks = await fetchTasksForAssignedProjects(userId);
+        setTasks(assignedTasks.slice(0, 3));
 
+        // fetch recent activities related to the user's assigned projects
         const recentActivities = await fetchRecentActivities(userId);
         setActivities(recentActivities.slice(0, 3));
       } catch (err) {
@@ -65,13 +69,14 @@ const SummaryScreen = ({ navigation }) => {
     fetchData();
   }, [userId, userEmail, fetchProjects]);
 
+  // helper function for rendering each section as these are displayed the same
   const renderSection = (title, data, noDataText, navigateTo, type) => (
     <View style={GlobalStyles.sectionContainer}>
       {/* Section Header */}
       <View style={GlobalStyles.sectionHeader}>
         <Text style={GlobalStyles.sectionTitle}>{title}</Text>
       </View>
-
+      {/* Loading Indicator while fetching data */}
       {loading ? (
         <ActivityIndicator size="medium" color="#ffffff" />
       ) : data.length > 0 ? (
@@ -135,7 +140,7 @@ const SummaryScreen = ({ navigation }) => {
           "Featured Tasks",
           tasks,
           "No tasks found.",
-          "TasksScreen",
+          "Tasks",
           "task"
         )}
 
@@ -144,99 +149,15 @@ const SummaryScreen = ({ navigation }) => {
           "Recent Activities",
           activities,
           "No activities found.",
-          "ActivitiesScreen",
+          "Activities",
           "activity"
         )}
       </View>
 
       {/* Bottom navigation bar */}
-      <BottomBar
-        navigation={navigation}
-        activeScreen="Summary"
-        setFormVisible={setFormVisible}
-      />
-
-      {/* Create Project Modal */}
-      <CreateProjectModal
-        visible={isFormVisible}
-        onClose={() => setFormVisible(false)}
-        userId={userId}
-      />
-
-      {/* Task Detail Modal */}
-      {selectedTask && (
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={!!selectedTask}
-          onRequestClose={() => setSelectedTask(null)}
-        >
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>{selectedTask.title}</Text>
-              <Text style={styles.modalText}>{selectedTask.description}</Text>
-
-              <TouchableOpacity
-                style={GlobalStyles.standardButton}
-                onPress={() => setSelectedTask(null)}
-              >
-                <Text style={GlobalStyles.standardButtonText}>Close</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
-      )}
-
-      {/* Activity Detail Modal */}
-      {selectedActivity && (
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={!!selectedActivity}
-          onRequestClose={() => setSelectedActivity(null)}
-        >
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>{selectedActivity.description}</Text>
-
-              <TouchableOpacity
-                style={GlobalStyles.standardButton}
-                onPress={() => setSelectedActivity(null)}
-              >
-                <Text style={GlobalStyles.standardButtonText}>Close</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
-      )}
+      <BottomBar navigation={navigation} activeScreen="Summary" userId={userId} />
     </GradientBackground>
   );
 };
-
-// ===== Page-Specific Styles ===== //
-const styles = StyleSheet.create({
-  modalContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-  },
-  modalContent: {
-    backgroundColor: "#001524",
-    padding: 20,
-    borderRadius: 10,
-    width: "80%",
-    alignItems: "center",
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#FFFFFF",
-  },
-  modalText: {
-    color: "#FFFFFF",
-    marginTop: 10,
-  },
-});
 
 export default SummaryScreen;

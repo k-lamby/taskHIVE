@@ -28,27 +28,26 @@ import { useUser } from "../contexts/UserContext";
  */
 const fetchProjectUserIds = async (projectId) => {
   try {
-    console.log("🔍 Fetching user IDs for project:", projectId);
-
     if (!projectId) {
-      throw new Error("Project ID is required.");
+      throw new Error("No project ID");
     }
-
-    // ✅ Fetch the project document from Firestore
     const projectRef = doc(db, "projects", projectId);
     const projectDoc = await getDoc(projectRef);
 
     if (projectDoc.exists()) {
       const projectData = projectDoc.data();
-      console.log("✅ Found project data:", projectData);
-
-      return projectData.sharedWith || []; // ✅ Return the list of user IDs
+      // get the users the project has been shared with and check it is an array
+      const sharedWith = Array.isArray(projectData.sharedWith) ? projectData.sharedWith : [];
+      // we also need to get the person who created the project
+      const projectCreator = projectData.createdBy || null
+      // then combine into one array, and then remove duplicates
+      const allUsers = projectCreator ? [projectCreator, ...sharedWith] : [...sharedWith];
+      return Array.from(allUsers);
     } else {
-      console.warn("⚠️ Project not found for ID:", projectId);
       return [];
     }
   } catch (error) {
-    console.error("❌ Error fetching project user IDs:", error);
+    console.error("Error fetching project user IDs:", error);
     throw error;
   }
 };
@@ -132,11 +131,9 @@ const useProjectService = () => {
         createdAt: serverTimestamp(),
         dueDate: validDueDate || serverTimestamp(),
       });
-
-      console.log("✅ Project created successfully with ID:", docRef.id);
       return docRef.id;
     } catch (error) {
-      console.error("❌ Error creating project: ", error);
+      console.error("Error creating project: ", error);
       throw error;
     }
   };
@@ -150,11 +147,8 @@ const useProjectService = () => {
   const fetchProjects = useCallback(async () => {
     try {
       if (!userId || !userEmail) {
-        console.warn("⚠️ User ID or email is missing. Skipping fetch.");
         return [];
       }
-
-      console.log("🔍 Fetching projects for user:", { userId, userEmail });
 
       // Query for projects created by the user
       const createdByQuery = query(
@@ -193,8 +187,6 @@ const useProjectService = () => {
         acc[project.id] = project;
         return acc;
       }, {});
-
-      console.log("✅ Fetched projects:", Object.values(allProjects));
       return Object.values(allProjects);
     } catch (error) {
       console.error("❌ Error fetching projects: ", error);

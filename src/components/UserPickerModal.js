@@ -17,31 +17,33 @@ const UserPickerModal = ({ visible, onClose, onUserSelected, projectUsers }) => 
 
   const { userId, firstName } = useUser();
   const [userList, setUserList] = useState([]);
-  const [selectedUser, setSelectedUser] = useState(firstName);
+  const [selectedUser, setSelectedUser] = useState(null); // ✅ Store full user object
 
+  // ✅ Process projectUsers into an array and set default selection
   useEffect(() => {
     console.log("📌 Current user:", firstName);
 
-    if (Array.isArray(projectUsers) && userId) {
-      const usersArray = projectUsers.map((user) =>
-        typeof user === "object"
-          ? { id: user.id, name: user.name || "Unknown" }
-          : { id: user, name: "Unknown" }
-      );
+    if (Array.isArray(projectUsers)) {
+      console.log("📌 Valid projectUsers array detected:", projectUsers);
 
-      console.log("📌 Processed Users:", usersArray);
-
+      // ✅ Ensure the current user is always at the top of the list
       const sortedUsers = [
         { id: userId, name: firstName || "You" },
-        ...usersArray.filter((user) => user.id !== userId),
+        ...projectUsers.filter((user) => user.id !== userId),
       ];
 
+      console.log("📌 Sorted Users List:", sortedUsers);
+
       setUserList(sortedUsers);
+
+      // ✅ Set initial selected user
+      setSelectedUser(sortedUsers[0]);
     }
   }, [projectUsers, userId, firstName]);
 
   console.log("📌 Selected User:", selectedUser);
 
+  // ✅ If modal is not visible, return null to prevent rendering
   if (!visible) return null;
 
   return (
@@ -50,6 +52,7 @@ const UserPickerModal = ({ visible, onClose, onUserSelected, projectUsers }) => 
         <View style={styles.modalContainer}>
           <Text style={styles.modalTitle}>Select User</Text>
 
+          {/* User selection list inside a scrollable container */}
           <View style={styles.pickerContainer}>
             <ScrollView
               showsVerticalScrollIndicator={false}
@@ -59,26 +62,31 @@ const UserPickerModal = ({ visible, onClose, onUserSelected, projectUsers }) => 
               onMomentumScrollEnd={(event) => {
                 const index = Math.round(event.nativeEvent.contentOffset.y / 50);
                 if (userList[index]) {
-                  setSelectedUser(userList[index].name || "Unknown"); // ✅ Ensure it's a string
+                  setSelectedUser(userList[index]); // ✅ Correct: Updates selected user
                 }
               }}
             >
               {userList.map((user) => (
                 <View key={user.id} style={styles.pickerItem}>
-                  <Text style={[styles.pickerText, selectedUser === user.name && styles.selectedText]}>
-                    {user.name}
+                  <Text
+                    style={[
+                      styles.pickerText,
+                      selectedUser?.id === user.id && styles.selectedText,
+                    ]}
+                  >
+                    {user.name} {/* ✅ Correct: Extract and display only user name */}
                   </Text>
                 </View>
               ))}
             </ScrollView>
           </View>
 
+          {/* Confirm selection button */}
           <TouchableOpacity
             style={styles.confirmButton}
             onPress={() => {
-              const selectedUserObject = userList.find((user) => user.name === selectedUser);
-              if (selectedUserObject) {
-                onUserSelected(selectedUserObject); // ✅ Pass full object
+              if (selectedUser) {
+                onUserSelected(selectedUser); // ✅ Pass { id, name } object
               }
               onClose();
             }}
@@ -86,6 +94,7 @@ const UserPickerModal = ({ visible, onClose, onUserSelected, projectUsers }) => 
             <Text style={styles.confirmButtonText}>Select</Text>
           </TouchableOpacity>
 
+          {/* Cancel button */}
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>
             <Text style={styles.closeButtonText}>Cancel</Text>
           </TouchableOpacity>
@@ -95,13 +104,13 @@ const UserPickerModal = ({ visible, onClose, onUserSelected, projectUsers }) => 
   );
 };
 
-// ===== Styles ===== //
+// ================== Styles ================== //
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: "rgba(0, 0, 0, 0.5)", // Semi-transparent background
   },
   modalContainer: {
     width: width * 0.8,

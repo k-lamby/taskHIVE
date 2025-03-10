@@ -1,3 +1,4 @@
+//================== NOT CURRENTLY IN USE ===========================//
 //================== Add Activity Modal.js ===========================//
 // This is a pop up window for adding an activity to the database
 // it allows the user to utilise OS features for uploading a photo or
@@ -10,8 +11,6 @@ import {
   Modal,
   View,
   Text,
-  TextInput,
-  Pressable,
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
@@ -49,30 +48,38 @@ const AddActivityModal = ({ visible, onClose, projectId }) => {
       setMessage("");
       onClose();
     } catch (err) {
-      console.error("❌ Error adding message:", err);
+      console.error("Error adding message:", err);
       setError("Failed to add message. Please try again.");
     } finally {
       setUploading(false);
     }
   };
 
-  // ✅ Handle file selection and upload
+  // Handle file selection and upload
+  // takes the type of file the user wants to upload
+  // as the argument
   const handleFileUpload = async (mediaType) => {
+    // display a loading icon and any error message needed
     setUploading(true);
     setError("");
 
+    // prompt the user to select the file
     try {
       const file = await selectFile(mediaType);
+      // if the user hits cancel, then we clear the uploading icon
       if (!file) {
         setUploading(false);
         return;
       }
-
+      // create a unique file path for uploading and locating the data later
       const filePath = `activities/${projectId}/${Date.now()}_${file.fileName}`;
+      // we then upload the file, which returns the final location for where the file
+      // is stored
       const downloadURL = await uploadFile(file.uri, filePath, (progress) => {
         console.log(`Upload progress: ${progress}%`);
       });
 
+      // we then add the file meta data to the database so we can retrieve the document later
       await addDoc(collection(db, "projects", projectId, "activities"), {
         type: mediaType === "image" ? "image" : "document",
         content: downloadURL,
@@ -81,7 +88,7 @@ const AddActivityModal = ({ visible, onClose, projectId }) => {
         userId: user.uid,
       });
     } catch (err) {
-      console.error("❌ File upload failed:", err);
+      console.error("File upload failed:", err);
       setError("File upload failed. Please try again.");
     }
 
@@ -97,6 +104,7 @@ const AddActivityModal = ({ visible, onClose, projectId }) => {
 
           {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
+          {/** Display different icons depending on what the user wants to upload */}
           {!activityType && (
             <>
               <TouchableOpacity onPress={() => setActivityType("message")} style={styles.optionButton}>
@@ -113,7 +121,7 @@ const AddActivityModal = ({ visible, onClose, projectId }) => {
               </TouchableOpacity>
             </>
           )}
-
+          {/** Display an activity indicator when uploading files */}
           {uploading && <ActivityIndicator size="large" color="#1E90FF" />}
         </View>
       </View>
@@ -121,7 +129,7 @@ const AddActivityModal = ({ visible, onClose, projectId }) => {
   );
 };
 
-// ✅ Add the missing `styles` object
+//======Page specific styles======//
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,

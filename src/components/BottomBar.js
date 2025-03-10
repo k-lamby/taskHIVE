@@ -1,124 +1,101 @@
 //================== BottomBar.js ===========================//
-// This is the tool bar at the bottom of the page
-// it is displayed throughout the application whenever the user is logged in
-//===============================================================//
-import React, {useState} from 'react';
-import { View, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faHouse, faClipboardCheck, faCirclePlus, faCircleCheck, faUser} from '@fortawesome/free-solid-svg-icons';
+// This is the toolbar at the bottom of the page.
+// It is displayed throughout the application whenever the user is logged in.
+// It includes navigation buttons and a button to create a new project.
+//===========================================================//
 
-import CreateProjectModal from './CreateProjectModal';
+import React, { useState } from "react";
+import { View, TouchableOpacity, StyleSheet, SafeAreaView } from "react-native";
+import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
+import { faHouse, faClipboardCheck, faCirclePlus, faCircleCheck, faUser } from "@fortawesome/free-solid-svg-icons";
+
+import CreateProjectModal from "./CreateProjectModal"; // Moved here
 
 const BottomBar = ({ navigation, activeScreen, userId }) => {
-  // this stores the visibility of the add project form
+  // This state controls the visibility of the "Create Project" modal
   const [isFormVisible, setFormVisible] = useState(false);
 
   return (
-    //make sure this is rendered within the viewable area of the device
     <SafeAreaView style={styles.safeArea}>
-      <View>
-      {/* Create project modal attached to the bottom bar */}
-      <CreateProjectModal 
-        visible={isFormVisible} 
-        onClose={() => setFormVisible(false)} 
-        userId={userId}
-      />
-      </View>
-      {/* For each icon we check to see if its associated with the current page
-      this then displays it a different colour to help with navigation around the application */}
+      {/* Create Project Modal (now inside BottomBar) */}
+      <CreateProjectModal visible={isFormVisible} onClose={() => setFormVisible(false)} userId={userId} />
+
+      {/* Bottom bar container */}
       <View style={styles.container}>
-        <TouchableOpacity 
-            onPress={() => navigation.navigate('Summary')}
-            style={[styles.iconContainer, activeScreen === 'Summary' && styles.activeIconContainer]} >
-            <FontAwesomeIcon
-                icon = {faHouse}
-                size = {24}
-                style={[styles.icon, activeScreen === 'Summary' && styles.activeIcon]} />
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          onPress={() => navigation.navigate('Projects')}
-          style={[styles.iconContainer, activeScreen === 'Projects' && styles.activeIconContainer]}    >
-                <FontAwesomeIcon
-            icon = {faClipboardCheck}
-            size = {24}
-            style={[styles.icon, activeScreen === 'Projects' && styles.activeIcon]} />
-         
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          onPress={() => setFormVisible(true)}
-          style={[styles.iconContainer]}
+        {/* Summary (Home) Icon */}
+        <TouchableOpacity
+          onPress={() => navigation.navigate("Summary")}
+          style={[styles.iconContainer, activeScreen === "Summary" && styles.activeIconContainer]}
         >
-           <FontAwesomeIcon
-            icon = {faCirclePlus}
-            size = {24}
-            style={[styles.icon]} />
-         
+          <FontAwesomeIcon icon={faHouse} size={24} style={[styles.icon, activeScreen === "Summary" && styles.activeIcon]} />
         </TouchableOpacity>
 
-        <TouchableOpacity 
-          onPress={() => navigation.navigate('Tasks')}
-          style={[styles.iconContainer, activeScreen === 'Tasks' && styles.activeIconContainer]}
+        {/* Projects Icon */}
+        <TouchableOpacity
+          onPress={() => navigation.navigate("Projects")}
+          style={[styles.iconContainer, activeScreen === "Projects" && styles.activeIconContainer]}
         >
-           <FontAwesomeIcon
-            icon = {faCircleCheck}
-            size = {24}
-            style={[styles.icon, activeScreen === 'Tasks' && styles.activeIcon]} />
-         
+          <FontAwesomeIcon icon={faClipboardCheck} size={24} style={[styles.icon, activeScreen === "Projects" && styles.activeIcon]} />
         </TouchableOpacity>
 
-        <TouchableOpacity 
-          onPress={() => navigation.navigate('Settings')}
-          style={[styles.iconContainer, activeScreen === 'Settings' && styles.activeIconContainer]}
+        {/* Add Project Icon */}
+        <TouchableOpacity onPress={() => setFormVisible(true)} style={styles.iconContainer}>
+          <FontAwesomeIcon icon={faCirclePlus} size={24} style={styles.icon} />
+        </TouchableOpacity>
+
+        {/* Tasks Icon */}
+        <TouchableOpacity
+          onPress={() => navigation.navigate("Tasks")}
+          style={[styles.iconContainer, activeScreen === "Tasks" && styles.activeIconContainer]}
         >
-           <FontAwesomeIcon
-            icon = {faUser}
-            size = {24}
-            style={[styles.icon, activeScreen === 'Settings' && styles.activeIcon]} />
-       
+          <FontAwesomeIcon icon={faCircleCheck} size={24} style={[styles.icon, activeScreen === "Tasks" && styles.activeIcon]} />
+        </TouchableOpacity>
+
+        {/* Settings Icon */}
+        <TouchableOpacity
+          onPress={() => navigation.navigate("Settings")}
+          style={[styles.iconContainer, activeScreen === "Settings" && styles.activeIconContainer]}
+        >
+          <FontAwesomeIcon icon={faUser} size={24} style={[styles.icon, activeScreen === "Settings" && styles.activeIcon]} />
         </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
 };
 
+//======== Page-Specific Styles ===============//
 const styles = StyleSheet.create({
-  // make sure we arent overlapping any graphics at the bottom of the screen
+  // Ensures the bottom bar is rendered within the viewable area of the device
   safeArea: {
-    backgroundColor: '#001524',
-    width: '100%',
+    backgroundColor: "#001524",
+    width: "100%",
   },
-  // contents to be aligned vertically
-  // spaced evenly across the bottom of the page
+  // Container for bottom bar buttons
   container: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    backgroundColor: '#001524',
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+    backgroundColor: "#001524",
     paddingVertical: 10,
   },
-  // then create a transparent container for the icon to go in
-  // adds contrast
+  // Default icon container style
   iconContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 30, 
-    padding: 10, 
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    borderRadius: 30,
+    padding: 10,
   },
-  // then set the default icon style
+  // Default icon style
   icon: {
-    fontSize: 60,
-    color: 'white'
+    fontSize: 24,
+    color: "white",
   },
-  // if the active screen corresponds to the container then we want to make sure
-  // this is communicated back to the user
+  // If the active screen corresponds to the container, highlight the icon
   activeIconContainer: {
-    backgroundColor: 'rgba(255, 125, 0, 0.2)',
+    backgroundColor: "rgba(255, 125, 0, 0.2)",
   },
   activeIcon: {
-    fontSize: 40,
-    color: 'rgba(255, 125, 0, 1)',
-
+    fontSize: 24,
+    color: "rgba(255, 125, 0, 1)",
   },
 });
 

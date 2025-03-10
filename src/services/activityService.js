@@ -29,8 +29,6 @@ export const fetchRecentActivities = async (userId, maxActivities = 5) => {
   try {
     if (!userId) throw new Error("User ID is required to fetch activities.");
 
-    console.log("📌 Fetching recent activities for user:", userId);
-
     // Query activities where the user is either the creator or assigned to the task
     const activitiesQuery = query(
       collection(db, "activities"),
@@ -45,11 +43,9 @@ export const fetchRecentActivities = async (userId, maxActivities = 5) => {
       id: doc.id,
       ...doc.data(),
     }));
-
-    console.log(`✅ Fetched ${activities.length} activities.`);
     return activities;
   } catch (error) {
-    console.error("❌ Error fetching activities:", error);
+    console.error("Error fetching activities:", error);
     throw error;
   }
 };
@@ -69,7 +65,6 @@ export const addActivity = async (projectId, taskId, userId, activityData) => {
       throw new Error("Project ID, Task ID, and User ID are required.");
     }
 
-    console.log("📌 Adding activity:", { projectId, taskId, userId, activityData });
 
     // Store activities in a top-level "activities" collection
     const activityRef = collection(db, "activities");
@@ -82,8 +77,6 @@ export const addActivity = async (projectId, taskId, userId, activityData) => {
       ...activityData,
       timestamp: Timestamp.now(),
     });
-
-    console.log("✅ Activity added successfully! Document ID:", docRef.id);
     return docRef.id;
   } catch (error) {
     console.error("❌ Error adding activity:", error);
