@@ -6,6 +6,8 @@ workflows:
         - group
       vars:
         EXPO_TOKEN: $EXPO_TOKEN
+        APPLE_ID: $APPLE_ID
+        APP_STORE_CONNECT_PASSWORD: $APP_STORE_CONNECT_PASSWORD
       node: latest
       xcode: latest
     triggering:
