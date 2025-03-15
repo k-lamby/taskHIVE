@@ -22,5 +22,5 @@ workflows:
       - build/**/*
     publishing:
       app_store_connect:
-        apple_id: $APPLE_ID
-        password: $APP_STORE_CONNECT_PASSWORD
+        apple_id: lordlamberino@gmail.com
+        password: yhvp-segf-vykk-uekn
