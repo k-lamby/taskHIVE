@@ -3,7 +3,7 @@ workflows:
     name: iOS Release Workflow
     environment:
       vars:
-        EXPO_TOKEN: $EXPO_TOKEN # Add your Expo token as an environment variable in Codemagic
+        EXPO_TOKEN: $EXPO_TOKEN 
       node: latest
       xcode: latest
     triggering:
@@ -20,4 +20,5 @@ workflows:
       app_store_connect:
         apple_id: $APPLE_ID
         api_key: $APP_STORE_CONNECT_API_KEY
+        api_key_id: $APP_STORE_CONNECT_KEY_ID
         api_issuer_id: $APP_STORE_CONNECT_ISSUER_ID
