@@ -2,6 +2,8 @@ workflows:
   ios-release:
     name: iOS Release Workflow
     environment:
+      groups:
+        - groups
       vars:
         EXPO_TOKEN: $EXPO_TOKEN
       node: latest
