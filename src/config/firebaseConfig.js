@@ -10,13 +10,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // configuration details provided by firebase
 const firebaseConfig = {
-  apiKey: "AIzaSyAtvVbmFWVMrZXouvgFLVZsLWwHRzxjMmo",
-  authDomain: "taskhive-4edce.firebaseapp.com",
-  projectId: "taskhive-4edce",
-  storageBucket: "taskhive-4edce.firebasestorage.app",
-  messagingSenderId: "49192012242",
-  appId: "1:49192012242:web:5366eb06970a8213f7e00b",
-  measurementId: "G-ECX6NK3VQ1"
+  apiKey: ,,,,
+  authDomain: ,,,,,
+  projectId: ,,,,
+  storageBucket: ,,,,
+  messagingSenderId: ,,,,
+  appId: ,,,,
+  measurementId: ,,,,,
   };
 
 // initialise the app instance with the configuration details
